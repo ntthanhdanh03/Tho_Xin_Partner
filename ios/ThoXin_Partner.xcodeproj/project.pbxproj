@@ -11,6 +11,12 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		6ECF91C97448485488208C2F /* Google Sans Bold Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2EDAB4FF19E34218B26818D0 /* Google Sans Bold Italic.ttf */; };
+		0A776A55FB3249379BF7863A /* Google Sans Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 68D444ECB68043E6BC293B4E /* Google Sans Bold.ttf */; };
+		C80E7800BF8842AE8309DF34 /* Google Sans Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D272091F8E2346FE9381184F /* Google Sans Italic.ttf */; };
+		360EAC7EBE6F4CE1AC7DD87B /* Google Sans Medium Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 91284A09E3F549998C2A6B20 /* Google Sans Medium Italic.ttf */; };
+		E1E51E00080C459FAFA405C7 /* Google Sans Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA118E8164504710B348C1A7 /* Google Sans Medium.ttf */; };
+		EE6F3A8D69844294B4A8EB9A /* Google Sans Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 518F0C8DFAA745BF8C37C699 /* Google Sans Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +41,12 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ThoXin_Partner/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ThoXin_Partner/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		2EDAB4FF19E34218B26818D0 /* Google Sans Bold Italic.ttf */ = {isa = PBXFileReference; name = "Google Sans Bold Italic.ttf"; path = "../assets/fonts/Google Sans Bold Italic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		68D444ECB68043E6BC293B4E /* Google Sans Bold.ttf */ = {isa = PBXFileReference; name = "Google Sans Bold.ttf"; path = "../assets/fonts/Google Sans Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		D272091F8E2346FE9381184F /* Google Sans Italic.ttf */ = {isa = PBXFileReference; name = "Google Sans Italic.ttf"; path = "../assets/fonts/Google Sans Italic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		91284A09E3F549998C2A6B20 /* Google Sans Medium Italic.ttf */ = {isa = PBXFileReference; name = "Google Sans Medium Italic.ttf"; path = "../assets/fonts/Google Sans Medium Italic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		DA118E8164504710B348C1A7 /* Google Sans Medium.ttf */ = {isa = PBXFileReference; name = "Google Sans Medium.ttf"; path = "../assets/fonts/Google Sans Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		518F0C8DFAA745BF8C37C699 /* Google Sans Regular.ttf */ = {isa = PBXFileReference; name = "Google Sans Regular.ttf"; path = "../assets/fonts/Google Sans Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +105,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				62CA51CA6B114CF4B2277806 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -115,6 +128,20 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		62CA51CA6B114CF4B2277806 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				2EDAB4FF19E34218B26818D0 /* Google Sans Bold Italic.ttf */,
+				68D444ECB68043E6BC293B4E /* Google Sans Bold.ttf */,
+				D272091F8E2346FE9381184F /* Google Sans Italic.ttf */,
+				91284A09E3F549998C2A6B20 /* Google Sans Medium Italic.ttf */,
+				DA118E8164504710B348C1A7 /* Google Sans Medium.ttf */,
+				518F0C8DFAA745BF8C37C699 /* Google Sans Regular.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -185,6 +212,12 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				6ECF91C97448485488208C2F /* Google Sans Bold Italic.ttf in Resources */,
+				0A776A55FB3249379BF7863A /* Google Sans Bold.ttf in Resources */,
+				C80E7800BF8842AE8309DF34 /* Google Sans Italic.ttf in Resources */,
+				360EAC7EBE6F4CE1AC7DD87B /* Google Sans Medium Italic.ttf in Resources */,
+				E1E51E00080C459FAFA405C7 /* Google Sans Medium.ttf in Resources */,
+				EE6F3A8D69844294B4A8EB9A /* Google Sans Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
