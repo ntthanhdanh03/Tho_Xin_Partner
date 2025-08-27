@@ -5,7 +5,7 @@ import { store } from '../store'
 import qs from 'qs'
 
 export const api = axios.create({
-    baseURL: 'http://192.168.0.164:3000',
+    baseURL: 'http://192.168.1.4:3000',
     timeout: 15000,
     headers: {
         'Content-Type': 'application/json',

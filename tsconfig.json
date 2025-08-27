@@ -1,3 +1,8 @@
 {
-  "extends": "@react-native/typescript-config"
+    "extends": "@react-native/typescript-config",
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true
+    }
 }
