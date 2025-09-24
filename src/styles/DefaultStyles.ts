@@ -87,7 +87,7 @@ export const DefaultStyles = StyleSheet.create({
         color: Colors.black1B,
         fontSize: 14,
     },
-    textBold14BWhite: {
+    textBold14White: {
         ...Fonts.Bold,
         color: Colors.whiteFF,
         fontSize: 14,

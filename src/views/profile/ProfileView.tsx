@@ -7,6 +7,7 @@ import Spacer from '../components/Spacer'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import {
     ic_balence,
+    img_default_avatar,
     // ic_alert_circle,
     // ic_camera,
     // ic_chevron_right,
@@ -27,23 +28,24 @@ import PhotoOptionsPicker from '../components/PhotoOptionsPicker'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import VersionCheck from 'react-native-version-check'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { deleteInstallationAction, logoutAction } from '../../store/actions/authAction'
 
 const ProfileView = () => {
     const dispatch = useDispatch()
     const { t } = useTranslation()
     const { data: authData } = useSelector((store: any) => store.auth)
     const navigation = useNavigation()
-    const [showCameraOption, setShowCameraOption] = useState(false)
     const currentVersion = VersionCheck.getCurrentVersion()
     const handlePressLogout = async () => {
-        // if (userData?.user?.installationId) {
-        //     dispatch(
-        //         deleteInstallationAction({
-        //             installationId: userData?.user?.installationId,
-        //         })
-        //     )
-        // }
-        // dispatch(logoutAction())
+        if (authData?.user?.deviceToken?.token) {
+            dispatch(
+                deleteInstallationAction({
+                    userId: authData?.user?._id,
+                    token: authData?.user?.deviceToken?.token,
+                }),
+            )
+        }
+        dispatch(logoutAction())
     }
 
     return (
@@ -66,13 +68,30 @@ const ProfileView = () => {
             <ScrollView style={[DefaultStyles.wrapBody, { flex: 1 }]}>
                 <View style={{ alignItems: 'center' }}>
                     <Spacer height={5} />
-                    <Text style={{ ...DefaultStyles.textRegular20Black }}>
-                        {authData?.user?.fullName}
-                    </Text>
+
+                    <FastImage
+                        source={
+                            authData?.user?.avatarUrl
+                                ? { uri: authData?.user?.avatarUrl }
+                                : img_default_avatar
+                        }
+                        style={{
+                            height: scaleModerate(80),
+                            width: scaleModerate(80),
+                            borderRadius: 40,
+                        }}
+                    />
+
+                    {authData && (
+                        <Text style={{ ...DefaultStyles.textRegular20Black }}>
+                            {authData?.user?.fullName}
+                        </Text>
+                    )}
+
                     <Text style={{ ...DefaultStyles.textRegular16Black, color: '#344054' }}>
                         {authData?.user?.phoneNumber}
                     </Text>
-                    <Spacer height={20} />
+                    <Spacer height={10} />
                 </View>
                 <View>
                     {authData && (

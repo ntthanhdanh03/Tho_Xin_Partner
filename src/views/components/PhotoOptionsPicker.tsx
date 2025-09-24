@@ -19,7 +19,7 @@ const PhotoOptionsPicker = (props: IPhotoOptionsPicker) => {
     }, [props?.isVisible])
 
     const handlePhotoOption = async (item: any) => {
-        console.log('handlePhotoOption', item)
+        console.log('Vui lòng chọn', item)
         let image = null
         if (item?.key === 'camera') {
             image = await takeMedia({})
@@ -32,11 +32,11 @@ const PhotoOptionsPicker = (props: IPhotoOptionsPicker) => {
     return (
         <Picker
             data={[
-                { key: 'camera', name: t('takePhoto') },
-                { key: 'library', name: t('chooseLibrary') },
+                { key: 'camera', name: t('Chụp hình') },
+                { key: 'library', name: t('Chọn từ thu viện') },
             ]}
             isVisible={visible}
-            title={t('pleaseSelect')}
+            title={t('Vui lòng chọn')}
             onSelect={(item: any) => {
                 setTimeout(() => {
                     handlePhotoOption(item)

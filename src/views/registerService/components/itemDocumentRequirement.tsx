@@ -11,13 +11,23 @@ type ItemDocumentProps = {
     label: string
     navigationTo?: any
     index: number
+    onPress?: () => void
+    approved?: 'PENDING' | 'WAITING' | 'APPROVED'
 }
 
-const ItemDocumentRequirement: React.FC<ItemDocumentProps> = ({ label, navigationTo, index }) => {
+const ItemDocumentRequirement: React.FC<ItemDocumentProps> = ({
+    label,
+    navigationTo,
+    index,
+    onPress,
+    approved,
+}) => {
     const navigation = useNavigation()
 
     const handleNavigation = () => {
-        if (navigationTo) {
+        if (onPress) {
+            onPress()
+        } else if (navigationTo) {
             navigation.navigate(navigationTo as never)
         }
     }
@@ -25,10 +35,15 @@ const ItemDocumentRequirement: React.FC<ItemDocumentProps> = ({ label, navigatio
     return (
         <TouchableOpacity style={styles.container} onPress={handleNavigation}>
             <View style={styles.content}>
-                <Text style={DefaultStyles.textMedium12Black}>
+                <Text style={[DefaultStyles.textMedium12Black, { width: '50%' }]}>
                     {' '}
                     {index + 1}. {label}
                 </Text>
+                {approved === 'WAITING' ? (
+                    <Text style={{ color: Colors.yellow00 }}>Đang chờ duyệt</Text>
+                ) : approved === 'APPROVED' ? (
+                    <Text style={{ color: Colors.green34 }}>Đã duyệt</Text>
+                ) : null}
                 <FastImage source={ic_balence} style={{ height: 24, width: 24 }} />
             </View>
         </TouchableOpacity>

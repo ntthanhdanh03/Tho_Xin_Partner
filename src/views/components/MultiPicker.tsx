@@ -127,7 +127,7 @@ const MultiPicker = (props: IMultiPicker) => {
                 </ScrollView>
                 <Spacer height={15} />
                 <Button
-                    title={t('confirm')}
+                    title={t('Xác nhận')}
                     onPress={() => {
                         props?.onSelect(selectedItems)
                         props?.onClose()

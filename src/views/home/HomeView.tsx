@@ -1,79 +1,164 @@
-import React, { useState, useEffect } from 'react'
-import { StyleSheet, View, Text } from 'react-native'
-import Mapbox from '@rnmapbox/maps'
+import React, { useEffect, useRef, useState } from 'react'
+import {
+    DeviceEventEmitter,
+    PermissionsAndroid,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native'
+import MapboxGL from '@rnmapbox/maps'
+import FastImage from 'react-native-fast-image'
+import { useSelector } from 'react-redux'
+import Geolocation from 'react-native-geolocation-service'
 
-Mapbox.setAccessToken(
+import { Colors } from '../../styles/Colors'
+import { scaleModerate } from '../../styles/scaleDimensions'
+import { DefaultStyles } from '../../styles/DefaultStyles'
+import { img_default_avatar } from '../../assets'
+
+import SwitchButton from '../components/SwitchButton'
+import SocketUtil from '../../utils/socketUtil'
+import { useNavigation } from '@react-navigation/native'
+
+MapboxGL.setAccessToken(
     'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A',
 )
 
 const HomeView = () => {
-    const [selectedShop, setSelectedShop] = useState<any>(null)
+    const { data: authData } = useSelector((store: any) => store.auth)
+    const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+    const cameraRef = useRef<MapboxGL.Camera>(null)
+    const navigation = useNavigation()
 
-    // Quận 1
-    const center: [number, number] = [106.700981, 10.776889]
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('new_order', (order) => {
+            console.log('Danh đẹp trai')
+        })
 
-    // Danh sách cửa hàng mẫu
-    const shops = [
-        {
-            id: 'shop1',
-            name: 'Cửa hàng A',
-            address: '123 Lê Lợi, Q1',
-            coordinate: [106.703981, 10.776889],
-        },
-        {
-            id: 'shop2',
-            name: 'Cửa hàng B',
-            address: '45 Nguyễn Huệ, Q1',
-            coordinate: [106.7045, 10.7755],
-        },
-        {
-            id: 'shop3',
-            name: 'Cửa hàng C',
-            address: '67 Pasteur, Q1',
-            coordinate: [106.6995, 10.7745],
-        },
-    ]
+        return () => subscription.remove()
+    }, [])
+
+    useEffect(() => {
+        let watchId: number | null = null
+
+        const requestPermission = async () => {
+            if (Platform.OS === 'android') {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                )
+                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                    console.log('Location permission denied')
+                    return
+                }
+            }
+
+            watchId = Geolocation.watchPosition(
+                (pos) => {
+                    const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude]
+                    setUserLocation(coords)
+                    cameraRef.current?.moveTo(coords, 500)
+                },
+                (err) => console.error(err),
+                {
+                    enableHighAccuracy: true,
+                    distanceFilter: 0.5,
+                    interval: 1000,
+                    fastestInterval: 2000,
+                },
+            )
+        }
+
+        requestPermission()
+
+        return () => {
+            if (watchId != null) Geolocation.clearWatch(watchId)
+        }
+    }, [])
+
+    const moveToUserLocation = () => {
+        if (cameraRef.current && userLocation) {
+            cameraRef.current.flyTo(userLocation, 1000)
+        }
+    }
+
+    const renderHeader = () => (
+        <View style={styles.header}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('PersonalInformationView' as never)}
+            >
+                <FastImage
+                    source={
+                        authData?.user?.avatarUrl
+                            ? { uri: authData.user.avatarUrl }
+                            : img_default_avatar
+                    }
+                    style={styles.avatar}
+                />
+            </TouchableOpacity>
+
+            <View style={styles.balanceBox}>
+                <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteAE }]}>
+                    Xem số dư
+                </Text>
+            </View>
+
+            <SwitchButton
+                onChange={(isActive: boolean) => {
+                    if (isActive) {
+                        SocketUtil.connect(authData?.user?._id)
+                    } else {
+                        SocketUtil.disconnect()
+                    }
+                }}
+            />
+        </View>
+    )
+
+    const renderFooter = () => (
+        <View style={styles.footer}>
+            <TouchableOpacity style={styles.waitingBox}>
+                <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteAE }]}>
+                    Danh sách chờ nhận
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={moveToUserLocation} style={styles.meButton}>
+                <Text style={{ color: 'white' }}>Me</Text>
+            </TouchableOpacity>
+        </View>
+    )
 
     return (
-        <View style={styles.page}>
-            <Mapbox.MapView style={styles.map}>
-                <Mapbox.Camera
-                    zoomLevel={14}
-                    centerCoordinate={center}
-                    animationMode="flyTo"
-                    animationDuration={2000}
-                />
-
-                {/* Render danh sách marker */}
-                {shops.map((shop) => (
-                    <Mapbox.PointAnnotation
-                        key={shop.id}
-                        id={shop.id}
-                        coordinate={shop.coordinate}
-                        onSelected={() => setSelectedShop(shop)}
-                    >
-                        <View style={styles.shopMarker} />
-                    </Mapbox.PointAnnotation>
-                ))}
-            </Mapbox.MapView>
-
-            {/* Popup hiển thị chi tiết khi chọn shop */}
-            {selectedShop && (
-                <View style={styles.popup}>
-                    <Text style={styles.popupTitle}>{selectedShop.name}</Text>
-                    <Text>{selectedShop.address}</Text>
-                </View>
-            )}
-        </View>
+        <SafeAreaView style={DefaultStyles.container}>
+            <MapboxGL.MapView style={styles.map}>
+                {userLocation && (
+                    <>
+                        <MapboxGL.Camera
+                            ref={cameraRef}
+                            zoomLevel={14}
+                            centerCoordinate={userLocation}
+                            animationMode="flyTo"
+                            animationDuration={2000}
+                        />
+                        <MapboxGL.PointAnnotation id="userMarker" coordinate={userLocation}>
+                            <View style={styles.userMarker} />
+                        </MapboxGL.PointAnnotation>
+                    </>
+                )}
+            </MapboxGL.MapView>
+            {renderHeader()}
+            {renderFooter()}
+        </SafeAreaView>
     )
 }
 
 export default HomeView
 
 const styles = StyleSheet.create({
-    page: { flex: 1 },
     map: { flex: 1 },
-    shopMarker: {
+    userMarker: {
         height: 18,
         width: 18,
         backgroundColor: 'blue',
@@ -81,22 +166,50 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         borderWidth: 2,
     },
-    popup: {
+    header: {
         position: 'absolute',
-        bottom: 30,
-        left: 20,
-        right: 20,
-        backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5,
+        margin: 10,
+        top: scaleModerate(30),
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '95%',
+        alignItems: 'center',
     },
-    popupTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginBottom: 4,
+    avatar: {
+        height: scaleModerate(40),
+        width: scaleModerate(40),
+        borderRadius: 40,
+    },
+    balanceBox: {
+        height: scaleModerate(40),
+        width: '70%',
+        borderRadius: 10,
+        backgroundColor: Colors.gray44,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    footer: {
+        position: 'absolute',
+        margin: 10,
+        bottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '95%',
+    },
+    waitingBox: {
+        height: scaleModerate(40),
+        width: '70%',
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.gray44,
+    },
+    meButton: {
+        height: scaleModerate(40),
+        width: '15%',
+        backgroundColor: Colors.primary,
+        borderRadius: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 })

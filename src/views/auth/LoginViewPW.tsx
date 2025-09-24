@@ -26,6 +26,7 @@ const LoginViewPW = ({ route }: any) => {
         const postData = {
             phoneNumber: phoneNumber,
             password: password,
+            role: 'partner',
         }
         dispatch(
             loginAction(postData, (data: any, error: any) => {

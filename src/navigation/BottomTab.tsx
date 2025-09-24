@@ -15,6 +15,8 @@ import LoginView from '../views/auth/LoginView'
 import { ic_home } from '../assets'
 import HomeView from '../views/home/HomeView'
 import ProfileView from '../views/profile/ProfileView'
+import HistoryOderView from '../views/history/HistoryOderView'
+import InComeView from '../views/income/InComeView'
 
 interface TabBar {
     state: TabNavigationState<ParamListBase>
@@ -33,18 +35,13 @@ const getIconAndLabel = (routeName: string, t: any) => {
             iconDefault = ic_home
             iconActive = ic_home
             break
-        case 'DocumentTab':
-            label = t('document')
+        case 'HistoryTab':
+            label = t('Lịch sử')
             iconDefault = ic_home
             iconActive = ic_home
             break
-        case 'ForumTab':
-            label = t('forum')
-            iconDefault = ic_home
-            iconActive = ic_home
-            break
-        case 'MessageTab':
-            label = t('message')
+        case 'InComeTab':
+            label = t('Thu Nhập')
             iconDefault = ic_home
             iconActive = ic_home
             break
@@ -171,6 +168,40 @@ const ProfileStackScreen = ({ route }: any) => {
     )
 }
 
+const HistoryOderStack = createNativeStackNavigator()
+const HistoryOderStackScreen = ({ route }: any) => {
+    return (
+        <HistoryOderStack.Navigator
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
+            <HistoryOderStack.Screen
+                name="HistoryOderView"
+                component={HistoryOderView}
+                initialParams={route?.params}
+            />
+        </HistoryOderStack.Navigator>
+    )
+}
+
+const InComeStack = createNativeStackNavigator()
+const InComeStackScreen = ({ route }: any) => {
+    return (
+        <InComeStack.Navigator
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
+            <InComeStack.Screen
+                name="InComeView"
+                component={InComeView}
+                initialParams={route?.params}
+            />
+        </InComeStack.Navigator>
+    )
+}
+
 const Tab = createBottomTabNavigator()
 const BottomTab = () => {
     return (
@@ -179,6 +210,8 @@ const BottomTab = () => {
             tabBar={(props) => <MyTabBar {...props} />}
         >
             <Tab.Screen name="HomeTab" component={HomeStackScreen} />
+            <Tab.Screen name="HistoryTab" component={HistoryOderStackScreen} />
+            <Tab.Screen name="InComeTab" component={InComeStackScreen} />
             <Tab.Screen name="ProfileTab" component={ProfileStackScreen} />
         </Tab.Navigator>
     )
@@ -195,7 +228,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         paddingTop: scaleModerate(10),
-        paddingBottom: scaleModerate(15),
+        paddingBottom: scaleModerate(20),
         paddingHorizontal: scaleModerate(10),
         backgroundColor: Colors.whiteFC,
         ...DefaultStyles.shadow,

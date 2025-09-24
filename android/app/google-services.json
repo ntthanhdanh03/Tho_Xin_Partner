@@ -1,0 +1,48 @@
+{
+    "project_info": {
+        "project_number": "828814991191",
+        "project_id": "thoixinproject",
+        "storage_bucket": "thoixinproject.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:828814991191:android:926bdbc324c0773c5f6812",
+                "android_client_info": {
+                    "package_name": "com.thoxin_mobile"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyCX8-KPpqVC0mMeGgEajFeenVfFD-ghk9g"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        },
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:828814991191:android:15126c7a561551925f6812",
+                "android_client_info": {
+                    "package_name": "com.thoxin_partner"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyCX8-KPpqVC0mMeGgEajFeenVfFD-ghk9g"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

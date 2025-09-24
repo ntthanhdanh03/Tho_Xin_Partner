@@ -22,11 +22,62 @@ const authReducer = (state = initialState, action: IAction) => {
             return { ...state, loading: true }
         }
         case types.LOG_IN + types.SUCCESS: {
-            console.log('action.payloaddddddddd', action.payload)
-            return { ...state, data: action.payload, loading: false, type: 'new' }
+            return { ...state, data: action.payload, loading: false }
         }
         case types.LOG_IN + types.FAILURE: {
             return { ...state, data: null, loading: false }
+        }
+        case types.REFRESH_TOKEN: {
+            return { ...state, loading: true }
+        }
+        case types.REFRESH_TOKEN + types.SUCCESS: {
+            return { ...state, data: action.payload, loading: false }
+        }
+        case types.REFRESH_TOKEN + types.FAILURE: {
+            return { ...state, data: null, loading: false }
+        }
+        case types.UPDATE_USER + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state?.data,
+                    user: { ...state?.data?.user, ...action.payload },
+                },
+                loading: false,
+            }
+        }
+        case types.UPDATE_USER_KYC + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state?.data,
+                    user: {
+                        ...state?.data?.user,
+                        partner: {
+                            ...state?.data?.user?.partner,
+                            kyc: {
+                                ...state?.data?.user?.partner?.kyc,
+                                ...action.payload,
+                            },
+                        },
+                    },
+                },
+                loading: false,
+            }
+        }
+
+        case types.CREATE_INSTALLATION + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state?.data,
+                    user: {
+                        ...state?.data?.user,
+                        deviceToken: action.payload,
+                    },
+                },
+                loading: false,
+            }
         }
         case types.LOG_OUT: {
             return { ...state, data: null, loading: false }

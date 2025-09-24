@@ -4,7 +4,7 @@ import { HEIGHT_SCREEN, WIDTH_SCREEN } from '../../styles/scaleDimensions'
 import { Colors } from '../../styles/Colors'
 
 const LoadingView = ({ loading }: { loading: boolean }) => {
-    if (!loading) return null // tốt hơn display: none
+    if (!loading) return null
 
     return (
         <View style={styles.overlay}>

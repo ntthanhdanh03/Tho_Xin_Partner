@@ -14,7 +14,9 @@ import NewPasswordView from '../views/auth/NewPasswordView'
 
 const OutStack = createNativeStackNavigator()
 const OutsideStack = () => {
-    useEffect(() => {}, [])
+    useEffect(() => {
+        console.log('OutsideStack mounted')
+    }, [])
     return (
         <OutStack.Navigator
             screenOptions={{
@@ -25,7 +27,6 @@ const OutsideStack = () => {
             <OutStack.Screen name="LoginViewPW" component={LoginViewPW} />
             <OutStack.Screen name="RegisterOTPView" component={RegisterOTPView} />
             <OutStack.Screen name="NewPasswordView" component={NewPasswordView} />
-
             <OutStack.Screen name="ForgotPasswordView" component={ForgotPasswordView} />
             <OutStack.Screen name="ResetPasswordView" component={ResetPasswordView} />
         </OutStack.Navigator>

@@ -15,75 +15,68 @@ import { uploadKycPhoto } from '../../services/uploadKycPhoto '
 import Button from '../components/Button'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateUserKYCAction } from '../../store/actions/authAction'
+import { updateUserAction } from '../../store/actions/authAction'
 
-const OwnerVerificationView = () => {
-    const navigation = useNavigation()
-    const dispatch = useDispatch()
+const UploadAvatarView = () => {
     const route = useRoute<any>()
-    const { data, storageKey, auth } = route.params || {}
+    const dispatch = useDispatch()
+    const { data, storageKey, auth, firstLogin } = route.params || {}
     const { data: authData } = useSelector((store: any) => store.auth)
     const [showCameraOption, setShowCameraOption] = useState(false)
-    const [judicialRecord, setJudicialRecord] = useState('')
-    const KYC_USER_DATA = authData?.user?.partner?.kyc
+    const [avtImage, setAvtImage] = useState('')
 
     useEffect(() => {
         if (data) {
-            setJudicialRecord(data.judicialRecord || '')
+            setAvtImage(data.avtImage || '')
             console.log('Loaded owner verification data from params:', data)
         } else if (auth) {
-            setJudicialRecord(KYC_USER_DATA?.registeredSimImageUrl || '')
+            setAvtImage(authData?.user?.avatarUrl || '')
         }
     }, [data])
 
     const handleUploadAvatar = async (image: any) => {
-        const uploadedImage = await uploadKycPhoto(image, 'registeredSimImageUrl')
+        const uploadedImage = await uploadKycPhoto(image, 'avatarImageUrl')
         if (uploadedImage?.url) {
             console.log('Uploaded Owner Verification URL:', uploadedImage.url)
-            setJudicialRecord(uploadedImage.url)
+            setAvtImage(uploadedImage.url)
         }
     }
 
     const handleSave = async () => {
-        if (data) {
-            const ownerData = {
-                judicialRecord,
+        if (firstLogin === 'true') {
+            const avtImageData = {
+                avtImage,
             }
-
             try {
-                // Load current data from storage
                 const json = await AsyncStorage.getItem(storageKey)
                 const currentData = json
                     ? JSON.parse(json)
                     : {
-                          identity: {},
-                          judicial: {},
-                          owner: {},
+                          avatarUrl: {},
                       }
-
                 // Update owner data
                 const updatedData = {
                     ...currentData,
-                    owner: ownerData,
+                    avatar: avtImageData,
                 }
 
-                // Save back to storage
                 await AsyncStorage.setItem(storageKey, JSON.stringify(updatedData))
-                console.log('Saved owner verification data:', ownerData)
+                console.log('Saved owner verification data:', avtImageData)
             } catch (e) {
                 console.error('Error saving owner verification data:', e)
             }
         } else if (auth) {
             dispatch(
-                updateUserKYCAction(
+                updateUserAction(
                     {
-                        id: authData?.user?.partner?.kyc?._id,
+                        id: authData?.user?._id,
                         updateData: {
-                            registeredSimImageUrl: judicialRecord,
+                            avatarUrl: avtImage,
                         },
                     },
                     (data: any, error: any) => {
                         if (data) {
+                            console.log('Cập nhật thông tin cá nhân thành công:', data)
                         }
                     },
                 ),
@@ -93,7 +86,7 @@ const OwnerVerificationView = () => {
 
     return (
         <SafeAreaView style={DefaultStyles.container}>
-            <Header isBack title="Thông tin SIM chính chủ" />
+            <Header isBack title="Ảnh đại diện" />
             <View style={{ flex: 1, paddingTop: 20 }}>
                 <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
                     <Text style={DefaultStyles.textBold12Black}>HÌNH ẢNH</Text>
@@ -106,22 +99,23 @@ const OwnerVerificationView = () => {
                             paddingVertical: scaleModerate(10),
                         }}
                     >
-                        <Text style={DefaultStyles.textMedium13Black}>
-                            Cú pháp kiểm tra SIM chính chủ: Nhắn tin TTTB gửi 1414
-                        </Text>
+                        <Text style={DefaultStyles.textMedium13Black}>- Chụp chính diện</Text>
                         <Spacer height={6} />
+                        <Text style={DefaultStyles.textMedium13Black}>
+                            - Phông trơn, không cản vật
+                        </Text>
                     </View>
                 </View>
                 <Spacer height={20} />
                 <TouchableOpacity
-                    style={[styles.imageBox, judicialRecord && styles.imageBoxCaptured]}
+                    style={[styles.imageBox, avtImage && styles.imageBoxCaptured]}
                     onPress={() => setShowCameraOption(true)}
                     activeOpacity={0.7}
                 >
-                    {judicialRecord ? (
+                    {avtImage ? (
                         <>
                             <FastImage
-                                source={{ uri: judicialRecord }}
+                                source={{ uri: avtImage }}
                                 style={styles.capturedImage}
                                 resizeMode={FastImage.resizeMode.cover}
                             />
@@ -157,7 +151,7 @@ const OwnerVerificationView = () => {
     )
 }
 
-export default OwnerVerificationView
+export default UploadAvatarView
 
 const styles = StyleSheet.create({
     imageBox: {

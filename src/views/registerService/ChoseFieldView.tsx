@@ -7,51 +7,49 @@ import { Colors } from '../../styles/Colors'
 import Header from '../components/Header'
 import { scaleModerate } from '../../styles/scaleDimensions'
 import PhotoOptionsPicker from '../components/PhotoOptionsPicker'
-import FastImage from 'react-native-fast-image'
-import { ic_balence } from '../../assets'
-import DateSelection from '../components/DateSelection'
 import Spacer from '../components/Spacer'
 import { uploadKycPhoto } from '../../services/uploadKycPhoto '
 import Button from '../components/Button'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Selection from '../components/Selection'
+import { FIELD, GENDER } from '../../constants/Constants'
 import { useDispatch, useSelector } from 'react-redux'
+import { at } from 'lodash'
 import { updateUserKYCAction } from '../../store/actions/authAction'
 
-const OwnerVerificationView = () => {
+const ChoseFieldView = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
     const route = useRoute<any>()
-    const { data, storageKey, auth } = route.params || {}
+    const { data, storageKey, auth, firstLogin } = route.params || {}
     const { data: authData } = useSelector((store: any) => store.auth)
     const [showCameraOption, setShowCameraOption] = useState(false)
-    const [judicialRecord, setJudicialRecord] = useState('')
+    const [choseField, setChoseField] = useState<string[]>([])
     const KYC_USER_DATA = authData?.user?.partner?.kyc
 
     useEffect(() => {
-        if (data) {
-            setJudicialRecord(data.judicialRecord || '')
-            console.log('Loaded owner verification data from params:', data)
+        console.log('firstLogin', firstLogin)
+        if (data?.choseField) {
+            const value = Array.isArray(data.choseField) ? data.choseField : [data.choseField]
+            setChoseField(value)
+            console.log('Loaded owner verification data from params:', value)
         } else if (auth) {
-            setJudicialRecord(KYC_USER_DATA?.registeredSimImageUrl || '')
+            console.log('KYC_USER_DATA?.choseField', KYC_USER_DATA?.choseField)
+            setChoseField(KYC_USER_DATA?.choseField || [])
         }
     }, [data])
 
     const handleUploadAvatar = async (image: any) => {
-        const uploadedImage = await uploadKycPhoto(image, 'registeredSimImageUrl')
+        const uploadedImage = await uploadKycPhoto(image, 'criminalRecordImageUrl')
         if (uploadedImage?.url) {
             console.log('Uploaded Owner Verification URL:', uploadedImage.url)
-            setJudicialRecord(uploadedImage.url)
+            setChoseField(uploadedImage.url)
         }
     }
 
     const handleSave = async () => {
-        if (data) {
-            const ownerData = {
-                judicialRecord,
-            }
-
+        if (firstLogin === 'true') {
             try {
-                // Load current data from storage
                 const json = await AsyncStorage.getItem(storageKey)
                 const currentData = json
                     ? JSON.parse(json)
@@ -61,15 +59,13 @@ const OwnerVerificationView = () => {
                           owner: {},
                       }
 
-                // Update owner data
                 const updatedData = {
                     ...currentData,
-                    owner: ownerData,
+                    field: { choseField },
                 }
 
-                // Save back to storage
                 await AsyncStorage.setItem(storageKey, JSON.stringify(updatedData))
-                console.log('Saved owner verification data:', ownerData)
+                console.log('Saved owner verification data:', choseField)
             } catch (e) {
                 console.error('Error saving owner verification data:', e)
             }
@@ -79,7 +75,7 @@ const OwnerVerificationView = () => {
                     {
                         id: authData?.user?.partner?.kyc?._id,
                         updateData: {
-                            registeredSimImageUrl: judicialRecord,
+                            choseField: choseField.map((item: any) => item.key),
                         },
                     },
                     (data: any, error: any) => {
@@ -93,54 +89,40 @@ const OwnerVerificationView = () => {
 
     return (
         <SafeAreaView style={DefaultStyles.container}>
-            <Header isBack title="Thông tin SIM chính chủ" />
-            <View style={{ flex: 1, paddingTop: 20 }}>
-                <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-                    <Text style={DefaultStyles.textBold12Black}>HÌNH ẢNH</Text>
-                    <Spacer height={10} />
-                </View>
-                <View style={{ backgroundColor: Colors.blue8C }}>
-                    <View
-                        style={{
-                            marginHorizontal: scaleModerate(16),
-                            paddingVertical: scaleModerate(10),
-                        }}
-                    >
-                        <Text style={DefaultStyles.textMedium13Black}>
-                            Cú pháp kiểm tra SIM chính chủ: Nhắn tin TTTB gửi 1414
-                        </Text>
-                        <Spacer height={6} />
-                    </View>
-                </View>
-                <Spacer height={20} />
-                <TouchableOpacity
-                    style={[styles.imageBox, judicialRecord && styles.imageBoxCaptured]}
-                    onPress={() => setShowCameraOption(true)}
-                    activeOpacity={0.7}
+            <Header isBack title="Chọn lĩnh vực của bạn" />
+            <View style={{ backgroundColor: Colors.blueB9 }}>
+                <View
+                    style={{
+                        marginHorizontal: scaleModerate(16),
+                        paddingVertical: scaleModerate(10),
+                    }}
                 >
-                    {judicialRecord ? (
-                        <>
-                            <FastImage
-                                source={{ uri: judicialRecord }}
-                                style={styles.capturedImage}
-                                resizeMode={FastImage.resizeMode.cover}
-                            />
-                            <View style={styles.capturedOverlay}>
-                                <Text style={{ ...DefaultStyles.textMedium14White }}>
-                                    ✓ Đã chụp - Nhấn để chụp lại
-                                </Text>
-                            </View>
-                        </>
-                    ) : (
-                        <>
-                            <FastImage
-                                source={ic_balence}
-                                style={styles.image}
-                                resizeMode={FastImage.resizeMode.cover}
-                            />
-                        </>
-                    )}
-                </TouchableOpacity>
+                    <Text style={DefaultStyles.textMedium13Black}>
+                        - Điên (Sửa ổ cắm , bóng đèn , công tắc , lắp đặt thiết bị điện...)
+                    </Text>
+                    <Spacer height={6} />
+                    <Text style={DefaultStyles.textMedium13Black}>
+                        - Nước (Sửa ống nước , lắp đặt thiết bị vệ sinh , thông tắc cống...)
+                    </Text>
+                    <Text style={DefaultStyles.textMedium13Black}>
+                        - Khóa (Sửa khóa , làm chìa khóa , lắp đặt khóa , mở khóa...)
+                    </Text>
+                    <Text style={DefaultStyles.textMedium13Black}>
+                        - Điện lạnh (Sửa tủ lạnh , máy giặt , máy lạnh , lò vi sóng...)
+                    </Text>
+                </View>
+            </View>
+            <View style={{ flex: 1, paddingTop: 20, marginHorizontal: 10 }}>
+                <Selection
+                    title="Chuyên môn"
+                    data={FIELD}
+                    multiple={true}
+                    keyValues={auth ? choseField : choseField.map((item: any) => item.key)}
+                    onSelect={(selectedItems: string[]) => {
+                        setChoseField(selectedItems)
+                        console.log('Selected fields:', selectedItems)
+                    }}
+                />
             </View>
 
             <Button title="Lưu" onPress={handleSave} containerStyle={{ paddingHorizontal: 10 }} />
@@ -157,7 +139,7 @@ const OwnerVerificationView = () => {
     )
 }
 
-export default OwnerVerificationView
+export default ChoseFieldView
 
 const styles = StyleSheet.create({
     imageBox: {

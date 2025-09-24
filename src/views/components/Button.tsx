@@ -73,8 +73,8 @@ const Button = (props: IButton) => {
                             <Text
                                 style={[
                                     props?.isColor
-                                        ? DefaultStyles.textBold14BWhite
-                                        : DefaultStyles.textBold14BWhite,
+                                        ? DefaultStyles.textBold14White
+                                        : DefaultStyles.textBold14White,
                                     props?.disable === true && { color: Colors.whiteFF },
                                 ]}
                             >
