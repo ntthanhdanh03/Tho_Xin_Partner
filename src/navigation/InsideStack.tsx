@@ -11,6 +11,11 @@ import CCCDCameraView from '../views/registerService/CCCDCameraView'
 import UploadAvatarView from '../views/registerService/UploadAvatarView'
 import ChoseFieldView from '../views/registerService/ChoseFieldView'
 import PersonalInformationView from '../views/profile/PersonalInformationView'
+import ListOrderView from '../views/home/ListOrderView'
+import YourOrderView from '../views/home/tab/YourOrderView'
+import OrderWaitingPartnerView from '../views/home/tab/OrderWaitingPartnerView'
+import DetailOrderView from '../views/home/DetailOrderView'
+import OrderApplicantView from '../views/home/tab/OrderApplicantView'
 
 const InStack = createNativeStackNavigator()
 
@@ -45,6 +50,12 @@ const InsideStack = () => {
             <InStack.Screen name="UploadAvatarView" component={UploadAvatarView} />
             <InStack.Screen name="ChoseFieldView" component={ChoseFieldView} />
             <InStack.Screen name="PersonalInformationView" component={PersonalInformationView} />
+
+            <InStack.Screen name="ListOrderView" component={ListOrderView} />
+            <InStack.Screen name="YourOrderView" component={YourOrderView} />
+            <InStack.Screen name="OrderWaitingPartnerView" component={OrderWaitingPartnerView} />
+            <InStack.Screen name="OrderApplicantView" component={OrderApplicantView} />
+            <InStack.Screen name="DetailOrderView" component={DetailOrderView} />
         </InStack.Navigator>
     )
 }

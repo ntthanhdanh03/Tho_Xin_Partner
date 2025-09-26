@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useDebugValue, useEffect, useRef, useState } from 'react'
 import {
     DeviceEventEmitter,
+    Dimensions,
     PermissionsAndroid,
     Platform,
     SafeAreaView,
@@ -11,8 +12,9 @@ import {
 } from 'react-native'
 import MapboxGL from '@rnmapbox/maps'
 import FastImage from 'react-native-fast-image'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Geolocation from 'react-native-geolocation-service'
+import Modal from 'react-native-modal' // 👈 thêm
 
 import { Colors } from '../../styles/Colors'
 import { scaleModerate } from '../../styles/scaleDimensions'
@@ -22,6 +24,10 @@ import { img_default_avatar } from '../../assets'
 import SwitchButton from '../components/SwitchButton'
 import SocketUtil from '../../utils/socketUtil'
 import { useNavigation } from '@react-navigation/native'
+import CustomModal from './CustomModal'
+import ListOrderView from './ListOrderView'
+import GlobalModalController from '../components/GlobalModal/GlobalModalController'
+import { getOrderAction } from '../../store/actions/orderAction'
 
 MapboxGL.setAccessToken(
     'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A',
@@ -30,16 +36,10 @@ MapboxGL.setAccessToken(
 const HomeView = () => {
     const { data: authData } = useSelector((store: any) => store.auth)
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+    const [isModalVisible, setIsModalVisible] = useState(false)
     const cameraRef = useRef<MapboxGL.Camera>(null)
     const navigation = useNavigation()
-
-    useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('new_order', (order) => {
-            console.log('Danh đẹp trai')
-        })
-
-        return () => subscription.remove()
-    }, [])
+    const dispatch = useDispatch()
 
     useEffect(() => {
         let watchId: number | null = null
@@ -108,7 +108,7 @@ const HomeView = () => {
             <SwitchButton
                 onChange={(isActive: boolean) => {
                     if (isActive) {
-                        SocketUtil.connect(authData?.user?._id)
+                        SocketUtil.connect(authData?.user?._id, 'partner')
                     } else {
                         SocketUtil.disconnect()
                     }
@@ -119,7 +119,26 @@ const HomeView = () => {
 
     const renderFooter = () => (
         <View style={styles.footer}>
-            <TouchableOpacity style={styles.waitingBox}>
+            <TouchableOpacity
+                style={styles.waitingBox}
+                onPress={() => {
+                    if (authData?.user?.partner?.profile?.isOnline === true) {
+                        dispatch(
+                            getOrderAction({}, (data: any) => {
+                                if (data) {
+                                    setIsModalVisible(true)
+                                }
+                            }),
+                        )
+                    } else {
+                        GlobalModalController.showModal({
+                            title: 'Thất bại',
+                            description: 'Vui lòng bật trạng thái hoạt động',
+                            icon: 'fail',
+                        })
+                    }
+                }}
+            >
                 <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteAE }]}>
                     Danh sách chờ nhận
                 </Text>
@@ -131,7 +150,7 @@ const HomeView = () => {
     )
 
     return (
-        <SafeAreaView style={DefaultStyles.container}>
+        <SafeAreaView style={[DefaultStyles.container]}>
             <MapboxGL.MapView style={styles.map}>
                 {userLocation && (
                     <>
@@ -148,8 +167,17 @@ const HomeView = () => {
                     </>
                 )}
             </MapboxGL.MapView>
+
             {renderHeader()}
             {renderFooter()}
+
+            <CustomModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                configHeight={0.85}
+            >
+                <ListOrderView />
+            </CustomModal>
         </SafeAreaView>
     )
 }

@@ -7,13 +7,19 @@ import InsideStack from './InsideStack'
 import { navigationRef } from './NavigationService'
 import { useDispatch, useSelector } from 'react-redux'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createInstallationAction, refreshTokenAction } from '../store/actions/authAction'
+import {
+    connectSocketSuccessAction,
+    createInstallationAction,
+    disconnectSocketSuccessAction,
+    refreshTokenAction,
+} from '../store/actions/authAction'
 import BootSplash from 'react-native-bootsplash'
 import { getFCMToken, initNotificationConfig } from '../utils/notificationUtils'
 import SocketUtil from '../utils/socketUtil'
 import { FirebaseMessagingTypes, getMessaging } from '@react-native-firebase/messaging'
 import Toast from 'react-native-toast-message'
 import NotificationModal from './NotificationModal'
+import { getOrderAction } from '../store/actions/orderAction'
 
 const Stack = createNativeStackNavigator()
 
@@ -49,11 +55,24 @@ const RootNavigator = () => {
     }, [])
 
     useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('new_order', (order) => {
-            console.log('Danh đẹp trai', order)
-        })
+        const events = [
+            { name: 'connect', handler: () => dispatch(connectSocketSuccessAction()) },
+            { name: 'disconnect', handler: () => dispatch(disconnectSocketSuccessAction()) },
+            {
+                name: 'new_order',
+                handler: () => {
+                    console.log('cCCCC')
+                    dispatch(getOrderAction({}))
+                },
+            },
+            { name: 'cancel_order', handler: (order: any) => console.log('Cancel order:', order) },
+            { name: 'update_order', handler: (order: any) => console.log('Update order:', order) },
+        ]
+        const subscriptions = events.map((e) => DeviceEventEmitter.addListener(e.name, e.handler))
 
-        return () => subscription.remove()
+        return () => {
+            subscriptions.forEach((sub) => sub.remove())
+        }
     }, [])
 
     useEffect(() => {
@@ -61,6 +80,7 @@ const RootNavigator = () => {
             if (prevUserState === null) {
                 initNotificationConfig((installationData: any) => {
                     handleCreateInstallation(authData, installationData)
+
                     const unsubscribe = getMessaging().onMessage(
                         (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
                             console.log('Foreground notification:', remoteMessage)

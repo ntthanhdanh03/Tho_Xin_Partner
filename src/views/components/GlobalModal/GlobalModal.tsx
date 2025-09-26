@@ -69,7 +69,7 @@ const GlobalModal = () => {
                 <Spacer height={15} />
                 <View style={{ flexDirection: 'row' }}>
                     <Button
-                        title={t('close')}
+                        title={t('Đóng')}
                         onPress={() => {
                             GlobalModalController.setActionChange(false)
                             setModalVisible(false)

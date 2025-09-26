@@ -12,7 +12,7 @@ const EmptyView = ({ top = 30 }: { top?: number }) => {
     return (
         <View style={{ alignItems: 'center', marginTop: scaleModerate(top) }}>
             <FastImage source={ic_empty} style={styles.image} />
-            <Text style={[DefaultStyles.textRegular14Gray]}>{t('noData')}</Text>
+            <Text style={[DefaultStyles.textRegular14Gray]}>{t('Dữ liệu trống')}</Text>
         </View>
     )
 }

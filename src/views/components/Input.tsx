@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         ...DefaultStyles.textBold12Black,
         backgroundColor: Colors.whiteFF,
         paddingHorizontal: scaleModerate(5),
-        fontSize: scaleModerate(10),
+        fontSize: scaleModerate(12),
     },
     wrapInput: {
         borderWidth: scaleModerate(1),

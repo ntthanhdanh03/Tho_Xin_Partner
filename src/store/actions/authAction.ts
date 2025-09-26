@@ -81,3 +81,10 @@ export const updateUserKYCSuccessAction = (data: any) => ({
     type: types.UPDATE_USER_KYC + types.SUCCESS,
     payload: data,
 })
+
+export const connectSocketSuccessAction = () => ({
+    type: types.CONNECT_SOCKET + types.SUCCESS,
+})
+export const disconnectSocketSuccessAction = () => ({
+    type: types.DISCONNECT_SOCKET + types.SUCCESS,
+})

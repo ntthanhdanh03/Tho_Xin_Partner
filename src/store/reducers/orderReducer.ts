@@ -24,6 +24,19 @@ const orderReducer = (state = initialState, action: IAction) => {
         case types.GET_ORDER + types.SUCCESS: {
             return { ...state, data: action.payload, loading: false }
         }
+        case types.APPLICANT_ORDER: {
+            return { ...state, loading: true }
+        }
+        case types.APPLICANT_ORDER + types.SUCCESS: {
+            return {
+                ...state,
+                data: state.data.map((order: any) =>
+                    order._id === action.payload._id ? action.payload : order,
+                ),
+                loading: false,
+            }
+        }
+
         default: {
             return state
         }

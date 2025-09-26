@@ -16,8 +16,8 @@ function* getOrderSaga({ payload, callback }: ReturnType<typeof actions.getOrder
 
         console.log('params', params)
 
-        const response: IResponse = yield call(() => api.get('/api/Posts', { params }))
-        console.log('***getPostQuestionSaga', response)
+        const response: IResponse = yield call(() => api.get('/orders', { params }))
+        console.log('***getOrderSaga', response)
         if (response && response?.status === 200 && response?.data) {
             console.log('payload', payload)
             yield put(actions.getOrderSuccessAction(response?.data))
@@ -27,11 +27,34 @@ function* getOrderSaga({ payload, callback }: ReturnType<typeof actions.getOrder
             callback && callback(null, 'failure')
         }
     } catch (e: any) {
-        console.log('getPostSaga', e, e?.response)
+        console.log('getOrderSaga', e, e?.response)
+        callback && callback(null, 'failure')
+    }
+}
+
+function* applicantOrderSaga({
+    payload,
+    callback,
+}: ReturnType<typeof actions.applicantOrderAction>) {
+    try {
+        console.log('payloadpayloadpayloadpayloadpayloadpayload', payload)
+        const response: IResponse = yield call(() =>
+            api.patch(`/orders/${payload?.id}/applicants`, payload.postData),
+        )
+
+        if (response && response?.status === 200 && response?.data) {
+            yield put(actions.applicantOrderSuccessAction(response?.data))
+            callback && callback(response?.data, null)
+        } else {
+            callback && callback(null, 'failure')
+        }
+    } catch (e: any) {
+        console.log('applicantOrderSaga', e, e?.response)
         callback && callback(null, 'failure')
     }
 }
 
 export default function* orderSaga() {
     yield all([takeLatest(types.GET_ORDER, getOrderSaga)])
+    yield all([takeLatest(types.APPLICANT_ORDER, applicantOrderSaga)])
 }

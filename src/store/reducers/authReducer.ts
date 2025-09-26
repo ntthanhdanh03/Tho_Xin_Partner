@@ -79,6 +79,47 @@ const authReducer = (state = initialState, action: IAction) => {
                 loading: false,
             }
         }
+
+        case types.CONNECT_SOCKET + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state.data,
+                    user: {
+                        ...state.data?.user,
+                        partner: {
+                            ...state.data?.user?.partner,
+                            profile: {
+                                ...state.data?.user?.partner?.profile,
+                                isOnline: true,
+                            },
+                        },
+                    },
+                },
+                loading: false,
+            }
+        }
+
+        case types.DISCONNECT_SOCKET + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state.data,
+                    user: {
+                        ...state.data?.user,
+                        partner: {
+                            ...state.data?.user?.partner,
+                            profile: {
+                                ...state.data?.user?.partner?.profile,
+                                isOnline: false,
+                            },
+                        },
+                    },
+                },
+                loading: false,
+            }
+        }
+
         case types.LOG_OUT: {
             return { ...state, data: null, loading: false }
         }

@@ -5,28 +5,23 @@ import { io, Socket } from 'socket.io-client'
 export default class SocketUtil {
     private static socket: Socket | null = null
 
-    static connect(partnerId: string) {
+    static connect(userId: string, type: 'partner' | 'client') {
         if (this.socket) {
             this.socket.disconnect()
         }
 
-        const socketUrl = 'http://192.168.1.2:3000'
+        const socketUrl = 'http://192.168.1.6:3000'
         this.socket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             forceNew: true,
             timeout: 20000,
             autoConnect: true,
-            query: { partnerId },
+            query: { userId, type },
         })
-
-        // Đăng ký listener ngay sau khi tạo socket
-        this.socket.on('connect', () => console.log('✅ Socket connected:', this.socket?.id))
-        this.socket.on('disconnect', (reason) => console.log('❌ Socket disconnected:', reason))
-        this.socket.on('partner_online', (data) => console.log('👤 Partner online:', data))
-        this.socket.on('partner_offline', (data) => console.log('👤 Partner offline:', data))
-        this.socket.on('new_order', (order) => {
-            DeviceEventEmitter.emit('new_order', order)
-            console.log('📦 New order received:', order)
+        this.socket.on('connect', () => DeviceEventEmitter.emit('connect'))
+        this.socket.on('disconnect', () => DeviceEventEmitter.emit('disconnect'))
+        this.socket.on('new_order', () => {
+            DeviceEventEmitter.emit('new_order')
         })
     }
 

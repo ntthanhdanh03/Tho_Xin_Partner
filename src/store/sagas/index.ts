@@ -3,8 +3,7 @@ import authSaga from './authSaga'
 import orderSaga from './orderSaga'
 
 function* rootSaga() {
-    yield all([authSaga()])
-    yield all([orderSaga()])
+    yield all([authSaga(), orderSaga()])
 }
 
 export default rootSaga

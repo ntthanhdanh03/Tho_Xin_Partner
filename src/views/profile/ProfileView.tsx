@@ -99,7 +99,8 @@ const ProfileView = () => {
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => {
-                                    navigation.navigate('PersonalInformationView' as never)
+                                    console.log(authData)
+                                    //   navigation.navigate('PersonalInformationView' as never)
                                 }}
                             >
                                 <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
