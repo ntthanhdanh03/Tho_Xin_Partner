@@ -1,3 +1,4 @@
+// SwitchButton.tsx
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { scaleModerate } from '../../styles/scaleDimensions'
@@ -6,10 +7,24 @@ import { Colors } from '../../styles/Colors'
 interface ISwitchButton {
     isActive?: boolean
     containerStyle?: ViewStyle
-    onChange?: any
+    onChange?: (isActive: boolean) => void
 }
+// SwitchButton.tsx
 const SwitchButton = (props: ISwitchButton) => {
     const [isActive, setIsActive] = useState(props?.isActive || false)
+
+    useEffect(() => {
+        if (props?.isActive !== undefined) {
+            setIsActive(props.isActive) // đồng bộ từ bên ngoài
+        }
+    }, [props.isActive])
+
+    const toggle = () => {
+        const next = !isActive
+        console.log('Toggle next:', next) // 👀 check tại đây
+        setIsActive(next)
+        props?.onChange && props?.onChange(next)
+    }
 
     return (
         <TouchableOpacity
@@ -21,10 +36,7 @@ const SwitchButton = (props: ISwitchButton) => {
                 },
                 props?.containerStyle,
             ]}
-            onPress={() => {
-                setIsActive(!isActive)
-                props?.onChange && props?.onChange(!isActive)
-            }}
+            onPress={toggle}
         >
             <View style={styles.button}></View>
         </TouchableOpacity>

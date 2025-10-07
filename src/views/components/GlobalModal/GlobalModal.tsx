@@ -81,7 +81,7 @@ const GlobalModal = () => {
                         <>
                             <Spacer width={15} />
                             <Button
-                                title={t('confirm')}
+                                title={t('Xác nhận')}
                                 onPress={() => {
                                     GlobalModalController.setActionChange(true)
                                     setModalVisible(false)

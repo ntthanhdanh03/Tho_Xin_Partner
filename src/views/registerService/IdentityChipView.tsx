@@ -57,9 +57,7 @@ const IdentityChipView: React.FC = () => {
             setIssuedDate(data.issuedDate)
             setGender(data.gender || '')
             setCapturedImages(data.capturedImages || { front: null, back: null })
-            console.log('Loaded identity data from params:', data)
         } else if (auth) {
-            console.log('Loaded identity data from KYC_USER_DATA:', KYC_USER_DATA)
             setFullName(authData?.user?.fullName || '')
             setIdCard(KYC_USER_DATA?.idCardNumber || '')
             setIssuedDate(KYC_USER_DATA?.idCardExpirationDate || '')

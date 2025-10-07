@@ -12,14 +12,13 @@ import { useDispatch, useSelector } from 'react-redux'
 import { applicantOrderAction } from '../../store/actions/orderAction'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { useNavigation } from '@react-navigation/native'
+import { getChatRoomByApplicantAction } from '../../store/actions/chatAction'
 
 const formatCurrency = (value: string) => {
     if (!value) return ''
-    // loại bỏ ký tự không phải số
     const numeric = value.replace(/\D/g, '')
     if (!numeric) return ''
-    // format có dấu chấm
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
+    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
 const DetailOrderView = ({ route }: any) => {
@@ -41,10 +40,6 @@ const DetailOrderView = ({ route }: any) => {
             note: note,
         }
 
-        console.log({
-            id: item._id,
-            postData,
-        })
         dispatch(
             applicantOrderAction(
                 {
@@ -58,6 +53,7 @@ const DetailOrderView = ({ route }: any) => {
                             description: error || 'Báo giá thành công',
                             icon: 'success',
                         })
+                        dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
                         navigation.goBack()
                         setIsModalVisible(false)
                     } else {

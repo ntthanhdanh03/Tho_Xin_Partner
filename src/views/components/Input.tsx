@@ -59,7 +59,7 @@ const Input = (props: IInput) => {
                         },
                         props?.area && {
                             height: scaleModerate(70),
-                            marginTop: scaleModerate(-10),
+                            marginTop: scaleModerate(15),
                             textAlignVertical: 'top',
                         },
                     ]}

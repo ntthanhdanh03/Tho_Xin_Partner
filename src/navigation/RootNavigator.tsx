@@ -20,15 +20,18 @@ import { FirebaseMessagingTypes, getMessaging } from '@react-native-firebase/mes
 import Toast from 'react-native-toast-message'
 import NotificationModal from './NotificationModal'
 import { getOrderAction } from '../store/actions/orderAction'
+import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
+import { getAppointmentAction } from '../store/actions/appointmentAction'
+import WorkingInProgressStack from './WorkingInProgressStack'
 
 const Stack = createNativeStackNavigator()
 
 const RootNavigator = () => {
     const { data: authData } = useSelector((store: any) => store.auth)
+    const { data: appointmentData } = useSelector((store: any) => store.appointment)
     const dispatch = useDispatch()
     const [isAuthChecked, setIsAuthChecked] = useState(false)
     const [prevUserState, setPrevUserState] = useState<any>(null)
-    const initialRoute = authData ? 'InsideStack' : 'OutsideStack'
     const [notif, setNotif] = useState<{ title?: string; message?: string; visible: boolean }>({
         visible: false,
     })
@@ -55,25 +58,39 @@ const RootNavigator = () => {
     }, [])
 
     useEffect(() => {
+        if (!authData?.user?._id) return
+
         const events = [
             { name: 'connect', handler: () => dispatch(connectSocketSuccessAction()) },
             { name: 'disconnect', handler: () => dispatch(disconnectSocketSuccessAction()) },
             {
                 name: 'new_order',
                 handler: () => {
-                    console.log('cCCCC')
-                    dispatch(getOrderAction({}))
+                    dispatch(
+                        getOrderAction({ typeService: authData?.user?.partner?.kyc?.choseField }),
+                    )
                 },
             },
             { name: 'cancel_order', handler: (order: any) => console.log('Cancel order:', order) },
             { name: 'update_order', handler: (order: any) => console.log('Update order:', order) },
+            {
+                name: 'order.selectApplicant',
+                handler: () => dispatch(getAppointmentAction({ partnerId: authData?.user?._id })),
+            },
+            {
+                name: 'chat.newMessage',
+                handler: () => {
+                    dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
+                },
+            },
         ]
+
         const subscriptions = events.map((e) => DeviceEventEmitter.addListener(e.name, e.handler))
 
         return () => {
             subscriptions.forEach((sub) => sub.remove())
         }
-    }, [])
+    }, [authData])
 
     useEffect(() => {
         if (authData) {
@@ -92,6 +109,15 @@ const RootNavigator = () => {
                         },
                     )
                 })
+                dispatch(getChatRoomByApplicantAction({ _applicantId: authData?.user?._id }))
+                dispatch(
+                    getAppointmentAction({ partnerId: authData?.user?._id }, (data: any) => {
+                        if (data?.appointmentInProgress?.length > 0) {
+                            SocketUtil.connect(authData?.user?._id, 'partner')
+                        }
+                    }),
+                )
+                dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
             }
         }
         setPrevUserState(authData)
@@ -118,17 +144,25 @@ const RootNavigator = () => {
     return (
         <>
             <NavigationContainer ref={navigationRef}>
-                <Stack.Navigator
-                    screenOptions={{ headerShown: false }}
-                    initialRouteName={initialRoute}
-                >
+                <Stack.Navigator screenOptions={{ headerShown: false }}>
                     {authData ? (
-                        <Stack.Screen name="InsideStack" component={InsideStack} />
+                        appointmentData?.appointmentInProgress?.length > 0 ? (
+                            <Stack.Screen
+                                name="WorkingInProgressStack"
+                                component={WorkingInProgressStack}
+                                initialParams={{
+                                    status: appointmentData.appointmentInProgress[0].status,
+                                }}
+                            />
+                        ) : (
+                            <Stack.Screen name="InsideStack" component={InsideStack} />
+                        )
                     ) : (
                         <Stack.Screen name="OutsideStack" component={OutsideStack} />
                     )}
                 </Stack.Navigator>
             </NavigationContainer>
+
             <NotificationModal
                 visible={notif.visible}
                 title={notif.title}

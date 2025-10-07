@@ -1,4 +1,5 @@
 import { api } from './api'
+import { BASE_URL } from './constants'
 
 export const UploadPhoto = async (image: any, callback?: (data: any, error: any) => void) => {
     try {
@@ -33,7 +34,7 @@ export const UploadPhoto = async (image: any, callback?: (data: any, error: any)
             const file = response.data.result.files.file[0]
             const uploadedFile = {
                 ...file,
-                url: `http://192.168.1.6:3000/upload/${file.name}`,
+                url: `${BASE_URL}/upload/${file.name}`,
             }
             console.log('UploadPhoto - Success:', uploadedFile)
             callback && callback(uploadedFile, null)

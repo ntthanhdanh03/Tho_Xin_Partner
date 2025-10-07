@@ -48,7 +48,7 @@ const LoginView = () => {
                     <Text style={[DefaultStyles.textRegular16Black]}>
                         {'Bắt đầu trải nghiệm với'}
                     </Text>
-                    <Text style={[DefaultStyles.textBold14Black]}>{' Thợ Xịn'}</Text>
+                    <Text style={[DefaultStyles.textBold14Black]}>{' Thợ Xịn Đối Tác'}</Text>
                 </View>
                 <Spacer height={16} />
                 <View>
@@ -71,12 +71,7 @@ const LoginView = () => {
                             },
                         }}
                         left={<TextInput.Icon icon={ic_balence} size={30} />}
-                        right={
-                            <TextInput.Icon
-                                icon={ic_calendar}
-                                onPress={() => console.log('Icon pressed')}
-                            />
-                        }
+                        right={<TextInput.Icon icon={ic_calendar} />}
                     />
                 </View>
                 <Spacer height={30} />

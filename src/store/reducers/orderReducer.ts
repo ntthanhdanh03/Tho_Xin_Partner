@@ -36,6 +36,18 @@ const orderReducer = (state = initialState, action: IAction) => {
                 loading: false,
             }
         }
+        case types.CANCEL_APPLICANT: {
+            return { ...state, loading: true }
+        }
+        case types.CANCEL_APPLICANT + types.SUCCESS: {
+            return {
+                ...state,
+                data: state.data.map((order: any) =>
+                    order._id === action.payload._id ? action.payload : order,
+                ),
+                loading: false,
+            }
+        }
 
         default: {
             return state

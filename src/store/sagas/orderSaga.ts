@@ -6,28 +6,23 @@ import { api } from '../../services/api'
 
 function* getOrderSaga({ payload, callback }: ReturnType<typeof actions.getOrderAction>) {
     try {
-        const params: any = {
-            // filter: {
-            //     where: {},
-            //     include: ['createdBy', 'like'],
-            //     order: 'createdAt DESC',
-            // },
+        const { typeService } = payload
+        const params = {
+            types: typeService?.join(','),
         }
 
-        console.log('params', params)
+        const response: IResponse = yield call(() => api.get('/orders/types', { params }))
 
-        const response: IResponse = yield call(() => api.get('/orders', { params }))
         console.log('***getOrderSaga', response)
-        if (response && response?.status === 200 && response?.data) {
-            console.log('payload', payload)
-            yield put(actions.getOrderSuccessAction(response?.data))
 
-            callback && callback(response?.data, null)
+        if (response && response.status === 200 && response.data) {
+            yield put(actions.getOrderSuccessAction(response.data))
+            callback && callback(response.data, null)
         } else {
             callback && callback(null, 'failure')
         }
     } catch (e: any) {
-        console.log('getOrderSaga', e, e?.response)
+        console.log('getOrderSaga', e?.response || e)
         callback && callback(null, 'failure')
     }
 }
@@ -54,7 +49,29 @@ function* applicantOrderSaga({
     }
 }
 
+function* cancelApplicantOrderSaga({
+    payload,
+    callback,
+}: ReturnType<typeof actions.applicantOrderAction>) {
+    try {
+        const response: IResponse = yield call(() =>
+            api.patch(`/orders/${payload?.orderId}/cancel-applicant/${payload?.partnerId}`),
+        )
+
+        if (response && response?.status === 200 && response?.data) {
+            yield put(actions.applicantOrderSuccessAction(response?.data))
+            callback && callback(response?.data, null)
+        } else {
+            callback && callback(null, 'failure')
+        }
+    } catch (e: any) {
+        console.log('cancelApplicantOrderSaga', e, e?.response)
+        callback && callback(null, 'failure')
+    }
+}
+
 export default function* orderSaga() {
     yield all([takeLatest(types.GET_ORDER, getOrderSaga)])
     yield all([takeLatest(types.APPLICANT_ORDER, applicantOrderSaga)])
+    yield all([takeLatest(types.CANCEL_APPLICANT, cancelApplicantOrderSaga)])
 }

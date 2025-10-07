@@ -21,3 +21,14 @@ export const applicantOrderSuccessAction = (data: any) => ({
     type: types.APPLICANT_ORDER + types.SUCCESS,
     payload: data,
 })
+
+export const cancelApplicantOrderAction = (data: any, callback?: any) => ({
+    type: types.CANCEL_APPLICANT,
+    payload: data,
+    callback,
+})
+
+export const cancelApplicantOrderSuccessAction = (data: any) => ({
+    type: types.CANCEL_APPLICANT + types.SUCCESS,
+    payload: data,
+})

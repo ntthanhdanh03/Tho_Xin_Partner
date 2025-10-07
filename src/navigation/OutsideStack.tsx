@@ -14,9 +14,6 @@ import NewPasswordView from '../views/auth/NewPasswordView'
 
 const OutStack = createNativeStackNavigator()
 const OutsideStack = () => {
-    useEffect(() => {
-        console.log('OutsideStack mounted')
-    }, [])
     return (
         <OutStack.Navigator
             screenOptions={{

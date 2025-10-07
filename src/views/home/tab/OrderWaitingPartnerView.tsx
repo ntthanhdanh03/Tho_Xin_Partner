@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { DefaultStyles } from '../../../styles/DefaultStyles'
 import { scaleModerate } from '../../../styles/scaleDimensions'
 import { useNavigation } from '@react-navigation/native'
-import { getOrderAction } from '../../../store/actions/orderAction'
 
 const OrderWaitingPartnerView = () => {
     const navigation = useNavigation()

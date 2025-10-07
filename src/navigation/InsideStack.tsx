@@ -16,26 +16,33 @@ import YourOrderView from '../views/home/tab/YourOrderView'
 import OrderWaitingPartnerView from '../views/home/tab/OrderWaitingPartnerView'
 import DetailOrderView from '../views/home/DetailOrderView'
 import OrderApplicantView from '../views/home/tab/OrderApplicantView'
+import ChatViewVer2 from '../views/chat/ChatViewVer2'
+import AppointmentInProgressView from '../views/appointment/AppointmentInProgress1View'
 
 const InStack = createNativeStackNavigator()
 
 const InsideStack = () => {
     const { data: authData } = useSelector((store: any) => store.auth)
+    const { data: appointmentData } = useSelector((store: any) => store.appointment)
     const [initialRoute, setInitialRoute] = useState<string | null>(null)
 
     useEffect(() => {
         const status = authData?.user?.partner?.kyc?.approved
-
-        if (status === 'APPROVED') {
-            setInitialRoute('BottomTab')
-        } else if (status === 'WAITING') {
+        if (status === 'APPROVED' || status === 'WAITING') {
             setInitialRoute('BottomTab')
         } else if (status === 'PENDING') {
             setInitialRoute('RegisterStaffView')
-        } else {
-            setInitialRoute('RegisterStaffView')
         }
     }, [authData])
+
+    useEffect(() => {
+        if (
+            Array.isArray(appointmentData?.appointmentInProgress) &&
+            appointmentData.appointmentInProgress.length > 0
+        ) {
+            setInitialRoute('AppointmentInProgressView')
+        }
+    }, [appointmentData])
 
     if (!initialRoute) return null
 
@@ -56,6 +63,7 @@ const InsideStack = () => {
             <InStack.Screen name="OrderWaitingPartnerView" component={OrderWaitingPartnerView} />
             <InStack.Screen name="OrderApplicantView" component={OrderApplicantView} />
             <InStack.Screen name="DetailOrderView" component={DetailOrderView} />
+            <InStack.Screen name="ChatViewVer2" component={ChatViewVer2} />
         </InStack.Navigator>
     )
 }

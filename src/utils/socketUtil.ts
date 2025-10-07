@@ -1,6 +1,7 @@
 // socketUtil.ts
 import { DeviceEventEmitter } from 'react-native'
 import { io, Socket } from 'socket.io-client'
+import { BASE_URL } from '../services/constants'
 
 export default class SocketUtil {
     private static socket: Socket | null = null
@@ -9,9 +10,7 @@ export default class SocketUtil {
         if (this.socket) {
             this.socket.disconnect()
         }
-
-        const socketUrl = 'http://192.168.1.6:3000'
-        this.socket = io(socketUrl, {
+        this.socket = io(BASE_URL, {
             transports: ['websocket', 'polling'],
             forceNew: true,
             timeout: 20000,
@@ -22,6 +21,15 @@ export default class SocketUtil {
         this.socket.on('disconnect', () => DeviceEventEmitter.emit('disconnect'))
         this.socket.on('new_order', () => {
             DeviceEventEmitter.emit('new_order')
+        })
+        this.socket.on('chat.newMessage', (payload: { orderId: string; roomId: string }) => {
+            console.log('📨 Nhận chat.newMessage với orderId , roomId:')
+            DeviceEventEmitter.emit('chat.newMessage')
+        })
+
+        this.socket.on('select_applicant', (appointment: string) => {
+            console.log('📨 Nhận select_applicant:', appointment)
+            DeviceEventEmitter.emit('order.selectApplicant', appointment)
         })
     }
 

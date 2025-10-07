@@ -28,6 +28,7 @@ import CustomModal from './CustomModal'
 import ListOrderView from './ListOrderView'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { getOrderAction } from '../../store/actions/orderAction'
+import { getAppointmentAction } from '../../store/actions/appointmentAction'
 
 MapboxGL.setAccessToken(
     'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A',
@@ -35,15 +36,24 @@ MapboxGL.setAccessToken(
 
 const HomeView = () => {
     const { data: authData } = useSelector((store: any) => store.auth)
+    const { data: appointmentData } = useSelector((store: any) => store.appointment)
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
     const [isModalVisible, setIsModalVisible] = useState(false)
+    const [isOnline, setIsOnline] = useState(false)
     const cameraRef = useRef<MapboxGL.Camera>(null)
     const navigation = useNavigation()
     const dispatch = useDispatch()
 
     useEffect(() => {
-        let watchId: number | null = null
+        if (isOnline) {
+            SocketUtil.connect(authData?.user?._id, 'partner')
+        } else {
+            SocketUtil.disconnect()
+        }
+    }, [isOnline])
 
+    useEffect(() => {
+        let watchId: number | null = null
         const requestPermission = async () => {
             if (Platform.OS === 'android') {
                 const granted = await PermissionsAndroid.request(
@@ -106,13 +116,8 @@ const HomeView = () => {
             </View>
 
             <SwitchButton
-                onChange={(isActive: boolean) => {
-                    if (isActive) {
-                        SocketUtil.connect(authData?.user?._id, 'partner')
-                    } else {
-                        SocketUtil.disconnect()
-                    }
-                }}
+                isActive={isOnline}
+                onChange={(newActive: boolean) => setIsOnline(newActive)}
             />
         </View>
     )
@@ -124,11 +129,14 @@ const HomeView = () => {
                 onPress={() => {
                     if (authData?.user?.partner?.profile?.isOnline === true) {
                         dispatch(
-                            getOrderAction({}, (data: any) => {
-                                if (data) {
-                                    setIsModalVisible(true)
-                                }
-                            }),
+                            getOrderAction(
+                                { typeService: authData?.user?.partner?.kyc?.choseField },
+                                (data: any) => {
+                                    if (data) {
+                                        setIsModalVisible(true)
+                                    }
+                                },
+                            ),
                         )
                     } else {
                         GlobalModalController.showModal({

@@ -28,13 +28,10 @@ const ChoseFieldView = () => {
     const KYC_USER_DATA = authData?.user?.partner?.kyc
 
     useEffect(() => {
-        console.log('firstLogin', firstLogin)
         if (data?.choseField) {
             const value = Array.isArray(data.choseField) ? data.choseField : [data.choseField]
             setChoseField(value)
-            console.log('Loaded owner verification data from params:', value)
         } else if (auth) {
-            console.log('KYC_USER_DATA?.choseField', KYC_USER_DATA?.choseField)
             setChoseField(KYC_USER_DATA?.choseField || [])
         }
     }, [data])
