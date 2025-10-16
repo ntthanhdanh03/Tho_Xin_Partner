@@ -2,6 +2,7 @@ import { StyleSheet, FlatList, View, Text, TouchableOpacity } from 'react-native
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { DefaultStyles } from '../../../styles/DefaultStyles'
+import { Colors } from '../../../styles/Colors'
 import EmptyView from '../../components/EmptyView'
 import { scaleModerate } from '../../../styles/scaleDimensions'
 import Spacer from '../../components/Spacer'
@@ -31,6 +32,7 @@ const OrderApplicantView = ({ route }: any) => {
         }
         navigation.navigate(...(['ChatViewVer2', { dataRoomChat }] as never))
     }
+
     const handleCancelApplicant = (item: any) => {
         GlobalModalController.onActionChange((value: boolean) => {
             if (value) {
@@ -79,32 +81,88 @@ const OrderApplicantView = ({ route }: any) => {
                     data={myOrders}
                     keyExtractor={(item) => item._id}
                     renderItem={({ item }) => (
-                        <View style={styles.content}>
-                            <Text style={styles.contentText}>{item.service}</Text>
-                            <Text>{item._id}</Text>
-                            <Text>{item.describe}</Text>
-                            <Text>{item.address}</Text>
-                            <Text>Trạng thái: {item.status}</Text>
-                            <Spacer height={10} />
-                            <View style={{ flexDirection: 'row' }}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        handleCancelApplicant(item)
-                                    }}
+                        <TouchableOpacity style={styles.card} activeOpacity={0.7}>
+                            {/* Header */}
+                            <View style={styles.cardHeader}>
+                                <Text style={[DefaultStyles.textBold18Black, { flex: 1 }]}>
+                                    {item.service}
+                                </Text>
+                                <View style={styles.statusBadge}>
+                                    <Text
+                                        style={[
+                                            DefaultStyles.textBold12Black,
+                                            { color: Colors.yellow00 },
+                                        ]}
+                                    >
+                                        {item.status.toUpperCase()}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Description */}
+                            <Text
+                                style={[
+                                    DefaultStyles.textRegular14Gray,
+                                    styles.description,
+                                    { lineHeight: 20 },
+                                ]}
+                                numberOfLines={2}
+                            >
+                                {item.describe}
+                            </Text>
+
+                            {/* Address */}
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoIcon}>📍</Text>
+                                <Text
+                                    style={[DefaultStyles.textRegular13Gray, { flex: 1 }]}
+                                    numberOfLines={1}
                                 >
-                                    <Text>Hủy báo giá</Text>
+                                    {item.address}
+                                </Text>
+                            </View>
+
+                            {/* Order ID */}
+                            <Text style={[DefaultStyles.textRegular12Gray, styles.orderId]}>
+                                ID: {item._id}
+                            </Text>
+
+                            {/* Action Buttons */}
+                            <View style={styles.actionContainer}>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.cancelButton]}
+                                    onPress={() => handleCancelApplicant(item)}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text
+                                        style={[
+                                            DefaultStyles.textBold14Black,
+                                            { color: Colors.redFD },
+                                        ]}
+                                    >
+                                        ✕ Hủy báo giá
+                                    </Text>
                                 </TouchableOpacity>
                                 <Spacer width={10} />
                                 <TouchableOpacity
-                                    onPress={() => {
-                                        handleNavigationChat(item)
-                                    }}
+                                    style={[styles.actionButton, styles.chatButton]}
+                                    onPress={() => handleNavigationChat(item)}
+                                    activeOpacity={0.7}
                                 >
-                                    <Text>Liên hệ với khách</Text>
+                                    <Text
+                                        style={[
+                                            DefaultStyles.textBold14Black,
+                                            { color: Colors.whiteFF },
+                                        ]}
+                                    >
+                                        💬 Liên hệ khách
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     )}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
                 />
             )}
         </View>
@@ -114,14 +172,70 @@ const OrderApplicantView = ({ route }: any) => {
 export default OrderApplicantView
 
 const styles = StyleSheet.create({
-    content: {
-        width: '100%',
-        padding: scaleModerate(16),
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+    listContent: {
+        padding: scaleModerate(12),
     },
-    contentText: {
-        fontSize: 16,
-        fontWeight: 'bold',
+    card: {
+        backgroundColor: Colors.whiteFF,
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: Colors.grayDE,
+        ...DefaultStyles.shadow,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+        gap: 10,
+    },
+    statusBadge: {
+        backgroundColor: Colors.yellowFFF,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: Colors.yellow00,
+    },
+    description: {
+        marginBottom: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        gap: 8,
+    },
+    infoIcon: {
+        fontSize: 14,
+    },
+    orderId: {
+        marginBottom: 12,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.grayDE,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 8,
+    },
+    actionButton: {
+        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        backgroundColor: Colors.whiteE6,
+        borderWidth: 1,
+        borderColor: Colors.redFD,
+    },
+    chatButton: {
+        backgroundColor: Colors.primary700,
     },
 })

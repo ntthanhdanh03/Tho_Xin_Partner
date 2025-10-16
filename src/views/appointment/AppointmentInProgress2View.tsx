@@ -1,4 +1,4 @@
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
@@ -16,18 +16,24 @@ import Header from '../components/Header'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { uploadKycPhoto } from '../../services/uploadKycPhoto '
 import { updateAppointmentAction } from '../../store/actions/appointmentAction'
+import LoadingWaitingApproveView from '../components/LoadingWaitingApproveView'
+import ImageViewing from 'react-native-image-viewing'
 
 const AppointmentInProgress2View = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
-    const route = useRoute<any>()
-    const { dataAppointment } = route.params || {}
     const { data: appointmentData } = useSelector((store: any) => store.appointment)
+
+    const APPOINTMENT_UPDATE_IN_PROGRESS = appointmentData?.appointmentInProgress?.[0]
 
     const [description, setDescription] = useState<string>('')
     const [price, setPrice] = useState<number>(0)
     const [images, setImages] = useState<string[]>([])
     const [showCameraOption, setShowCameraOption] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const [isImageViewVisible, setIsImageViewVisible] = useState(false)
+    const [imageIndex, setImageIndex] = useState(0)
 
     const handleUploadPhoto = async (image: any) => {
         const uploadedImage = await uploadKycPhoto(image, 'imageService')
@@ -37,8 +43,8 @@ const AppointmentInProgress2View = () => {
     }
 
     const handleConfirm = async () => {
+        setLoading(true)
         const postData = {
-            status: 3,
             agreedPrice: price,
             beforeImages: {
                 images: images,
@@ -47,18 +53,21 @@ const AppointmentInProgress2View = () => {
         }
         const typeUpdate = 'APPOINTMENT_UPDATE_IN_PROGRESS'
         const dataUpdate = {
-            id: appointmentData.appointmentInProgress[0]._id,
+            id: APPOINTMENT_UPDATE_IN_PROGRESS._id,
             typeUpdate,
             postData,
         }
+
         dispatch(
             updateAppointmentAction(dataUpdate, (data: any) => {
                 if (data) {
-                    // navigation.navigate(...(['AppointmentInProgress3View'] as never))
                 }
             }),
         )
     }
+
+    const imagesForGallery =
+        images.length > 0 ? images : APPOINTMENT_UPDATE_IN_PROGRESS?.beforeImages?.images || []
 
     return (
         <SafeAreaView style={DefaultStyles.container}>
@@ -93,11 +102,17 @@ const AppointmentInProgress2View = () => {
                     Tình trạng trước (Tối đa 5 ảnh)
                 </Text>
                 <View style={styles.imagesWrapper}>
-                    {images?.map((img, index) => (
-                        <View key={index} style={styles.imageBox}>
+                    {images.map((img, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            onPress={() => {
+                                setImageIndex(index)
+                                setIsImageViewVisible(true)
+                            }}
+                        >
                             <FastImage
                                 source={{ uri: img }}
-                                style={styles.capturedImage}
+                                style={styles.imageBox}
                                 resizeMode={FastImage.resizeMode.cover}
                             />
                             <TouchableOpacity
@@ -108,10 +123,10 @@ const AppointmentInProgress2View = () => {
                             >
                                 <Text style={styles.deleteText}>×</Text>
                             </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
                     ))}
 
-                    {images?.length < 5 && (
+                    {images.length < 5 && (
                         <TouchableOpacity
                             style={[styles.imageBox, styles.addBox]}
                             onPress={() => setShowCameraOption(true)}
@@ -150,11 +165,8 @@ const AppointmentInProgress2View = () => {
                     titleColor={Colors.black01}
                     onSwipeSuccess={() => {
                         GlobalModalController.onActionChange((value: boolean) => {
-                            if (value) {
-                                handleConfirm()
-                            } else {
-                                GlobalModalController.hideModal()
-                            }
+                            if (value) handleConfirm()
+                            else GlobalModalController.hideModal()
                         })
                         GlobalModalController.showModal({
                             title: 'Xác nhận kiểm tra lần cuối?',
@@ -174,6 +186,37 @@ const AppointmentInProgress2View = () => {
                     setShowCameraOption(false)
                 }}
                 onClose={() => setShowCameraOption(false)}
+            />
+
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <LoadingWaitingApproveView
+                        loading={loading}
+                        text="Chờ khách hàng xác nhận trạng thái"
+                        onCancel={() => {
+                            console.log('Người dùng nhấn Hủy')
+                            setLoading(false)
+                        }}
+                        onConfirm={() => {
+                            console.log('Người dùng nhấn Xác nhận')
+                            handleConfirm()
+                        }}
+                    />
+                </View>
+            )}
+
+            <ImageViewing
+                images={imagesForGallery.map((uri: any) => ({ uri }))}
+                imageIndex={imageIndex}
+                visible={isImageViewVisible}
+                onRequestClose={() => setIsImageViewVisible(false)}
+                HeaderComponent={({ imageIndex }) => (
+                    <View style={styles.headerIndicator}>
+                        <Text style={styles.indicatorText}>
+                            {imageIndex + 1} / {imagesForGallery.length}
+                        </Text>
+                    </View>
+                )}
             />
         </SafeAreaView>
     )
@@ -226,5 +269,30 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         lineHeight: 20,
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+    },
+    headerIndicator: {
+        position: 'absolute',
+        top: 40,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    indicatorText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 })

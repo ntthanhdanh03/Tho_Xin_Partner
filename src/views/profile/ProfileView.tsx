@@ -99,8 +99,7 @@ const ProfileView = () => {
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => {
-                                    console.log(authData)
-                                    //   navigation.navigate('PersonalInformationView' as never)
+                                    navigation.navigate('PersonalInformationView' as never)
                                 }}
                             >
                                 <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
@@ -126,7 +125,7 @@ const ProfileView = () => {
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => {
-                                    navigation.navigate('TransactionHistoryView' as never)
+                                    navigation.navigate('RateHistoryView' as never)
                                 }}
                             >
                                 <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>

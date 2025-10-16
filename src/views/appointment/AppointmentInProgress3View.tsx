@@ -18,6 +18,7 @@ import Button from '../components/Button'
 import { updateAppointmentAction } from '../../store/actions/appointmentAction'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { uploadKycPhoto } from '../../services/uploadKycPhoto '
+import LoadingWaitingApproveView from '../components/LoadingWaitingApproveView'
 
 const AppointmentInProgress3View = () => {
     const dispatch = useDispatch()
@@ -36,8 +37,8 @@ const AppointmentInProgress3View = () => {
     const grandTotal = laborCost + totalPartsCost
     const agreedPrice = appointmentData?.appointmentInProgress[0]?.agreedPrice || 0
     const difference = grandTotal - agreedPrice
+    const [loading, setLoading] = useState(false)
 
-    /** Upload ảnh */
     const handleUploadPhoto = async (image: any, issueIndex?: number) => {
         const uploadedUrl = await uploadKycPhoto(image, 'imageService')
         if (uploadedUrl && issueIndex !== undefined) {
@@ -69,11 +70,10 @@ const AppointmentInProgress3View = () => {
             return
         }
 
-        const postData = { status: 4, additionalIssues, laborCost: laborCost }
+        const postData = { additionalIssues, laborCost: laborCost }
         const typeUpdate = 'APPOINTMENT_UPDATE_IN_PROGRESS'
         const dataUpdate = {
             id: appointmentData.appointmentInProgress[0]._id,
-
             typeUpdate,
             postData,
         }
@@ -81,7 +81,7 @@ const AppointmentInProgress3View = () => {
         dispatch(
             updateAppointmentAction(dataUpdate, (data: any) => {
                 if (data) {
-                    navigation.navigate(...(['AppointmentInProgress4View'] as never))
+                    setLoading(true)
                 }
             }),
         )
@@ -94,7 +94,6 @@ const AppointmentInProgress3View = () => {
             <ScrollView style={{ ...DefaultStyles.wrapBody, flex: 1 }}>
                 <Spacer height={10} />
 
-                {/* Tiền công */}
                 <Input
                     title="Tiền công"
                     containerStyle={{ width: '100%' }}
@@ -108,7 +107,6 @@ const AppointmentInProgress3View = () => {
 
                 <Spacer height={10} />
 
-                {/* Phụ tùng */}
                 <View style={styles.sectionHeader}>
                     <Text style={DefaultStyles.textBold14Black}>Phát sinh / Phụ tùng</Text>
                     <TouchableOpacity onPress={handleAddIssue}>
@@ -118,7 +116,6 @@ const AppointmentInProgress3View = () => {
 
                 {additionalIssues.map((issue, index) => (
                     <View key={index} style={styles.issueBox}>
-                        {/* nút xoá phụ tùng */}
                         <TouchableOpacity
                             style={styles.removeBtn}
                             onPress={() =>
@@ -128,7 +125,6 @@ const AppointmentInProgress3View = () => {
                             <Text style={styles.removeText}>×</Text>
                         </TouchableOpacity>
 
-                        {/* ghi chú */}
                         <Input
                             title={`Ghi chú phụ tùng ${index + 1}`}
                             area
@@ -144,7 +140,6 @@ const AppointmentInProgress3View = () => {
 
                         <Spacer height={10} />
 
-                        {/* chi phí */}
                         <Input
                             title={`Chi phí phụ tùng ${index + 1}`}
                             keyboardType="numeric"
@@ -161,7 +156,6 @@ const AppointmentInProgress3View = () => {
 
                         <Spacer height={10} />
 
-                        {/* ảnh */}
                         <Text style={{ ...DefaultStyles.textBold14Black, marginBottom: 8 }}>
                             Ảnh phụ tùng {index + 1}
                         </Text>
@@ -190,7 +184,6 @@ const AppointmentInProgress3View = () => {
                                 </View>
                             ))}
 
-                            {/* Thêm ảnh */}
                             {issue.images.length < 2 && (
                                 <TouchableOpacity
                                     style={[styles.imageBox, styles.addBox]}
@@ -214,7 +207,6 @@ const AppointmentInProgress3View = () => {
                 <Spacer height={20} />
             </ScrollView>
 
-            {/* Footer */}
             <View style={styles.footer}>
                 <View>
                     <Text style={DefaultStyles.textRegular14Black}>
@@ -256,7 +248,23 @@ const AppointmentInProgress3View = () => {
                 </View>
             </View>
 
-            {/* Picker chọn ảnh */}
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <LoadingWaitingApproveView
+                        loading={loading}
+                        text="Chờ khách hàng xác nhận trạng thái"
+                        onCancel={() => {
+                            console.log('Người dùng nhấn Hủy')
+                            setLoading(false)
+                        }}
+                        onConfirm={() => {
+                            console.log('Người dùng nhấn Xác nhận')
+                            handleConfirm()
+                        }}
+                    />
+                </View>
+            )}
+
             <PhotoOptionsPicker
                 isVisible={showCameraOption}
                 onSelectPhoto={(image) => {
@@ -279,6 +287,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
     },
     issueBox: {
         marginVertical: 10,

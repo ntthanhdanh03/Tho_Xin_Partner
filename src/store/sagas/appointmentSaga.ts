@@ -1,3 +1,4 @@
+import { updateAppointmentAction } from './../actions/appointmentAction'
 import * as actions from '../actions/appointmentAction'
 import { put, takeLatest, delay, all, call } from 'redux-saga/effects'
 import * as types from '../types'
@@ -50,7 +51,30 @@ function* updateAppointmentSaga({
     }
 }
 
+function* updateCompleteAppointmentSaga({
+    payload,
+    callback,
+}: ReturnType<typeof actions.updateCompleteAppointmentAction>) {
+    try {
+        const response: IResponse = yield call(() =>
+            api.patch(`/appointments/${payload?.appointmentId}/complete`, payload.postData),
+        )
+        if (response && response?.status === 200 && response?.data) {
+            console.log('***updateCompleteAppointmentSaga', response?.data)
+            callback && callback(response?.data, null)
+        } else {
+            callback && callback(null, 'failure')
+        }
+    } catch (e: any) {
+        console.log('updateCompleteAppointmentSaga', e, e?.response)
+        callback && callback(null, 'failure')
+    }
+}
+
 export default function* appointmentSaga() {
-    yield all([takeLatest(types.GET_APPOINTMENT, getAppointmentSaga)])
-    yield all([takeLatest(types.UPDATE_APPOINTMENT, updateAppointmentSaga)])
+    yield all([
+        takeLatest(types.GET_APPOINTMENT, getAppointmentSaga),
+        takeLatest(types.UPDATE_APPOINTMENT, updateAppointmentSaga),
+        takeLatest(types.UPDATE_COMPLETE_APPOINTMENT, updateCompleteAppointmentSaga),
+    ])
 }

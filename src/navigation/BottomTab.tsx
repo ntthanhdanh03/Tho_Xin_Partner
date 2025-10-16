@@ -210,7 +210,7 @@ const BottomTab = () => {
             tabBar={(props) => <MyTabBar {...props} />}
         >
             <Tab.Screen name="HomeTab" component={HomeStackScreen} />
-            <Tab.Screen name="HistoryTab" component={HistoryOderStackScreen} />
+            {/* <Tab.Screen name="HistoryTab" component={HistoryOderStackScreen} /> */}
             <Tab.Screen name="InComeTab" component={InComeStackScreen} />
             <Tab.Screen name="ProfileTab" component={ProfileStackScreen} />
         </Tab.Navigator>
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         paddingTop: scaleModerate(10),
-        paddingBottom: scaleModerate(20),
+        paddingBottom: scaleModerate(24),
         paddingHorizontal: scaleModerate(10),
         backgroundColor: Colors.whiteFC,
         ...DefaultStyles.shadow,

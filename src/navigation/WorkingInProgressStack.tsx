@@ -17,46 +17,19 @@ import AppointmentInProgress2View from '../views/appointment/AppointmentInProgre
 import AppointmentInProgress3View from '../views/appointment/AppointmentInProgress3View'
 import AppointmentInProgress4View from '../views/appointment/AppointmentInProgress4View'
 import AppointmentInProgress5View from '../views/appointment/AppointmentInProgress5View'
+import AppointmentInProgressView from '../views/appointment/AppointmentInProgressView'
 
 const WorkingStack = createNativeStackNavigator()
 
-const WorkingInProgressStack = ({ route }: any) => {
-    const { status } = route.params || {}
-
-    const screenByStatus: Record<number, string> = {
-        1: 'AppointmentInProgress1View',
-        2: 'AppointmentInProgress2View',
-        3: 'AppointmentInProgress3View',
-        4: 'AppointmentInProgress4View',
-        5: 'AppointmentInProgress5View',
-    }
-
-    const initialScreen = screenByStatus[status] || 'AppointmentInProgress1View'
-
+const WorkingInProgressStack = () => {
     return (
         <WorkingStack.Navigator
             screenOptions={{ headerShown: false }}
-            initialRouteName={initialScreen}
+            initialRouteName={'AppointmentInProgressView'}
         >
             <WorkingStack.Screen
-                name="AppointmentInProgress1View"
-                component={AppointmentInProgress1View}
-            />
-            <WorkingStack.Screen
-                name="AppointmentInProgress2View"
-                component={AppointmentInProgress2View}
-            />
-            <WorkingStack.Screen
-                name="AppointmentInProgress3View"
-                component={AppointmentInProgress3View}
-            />
-            <WorkingStack.Screen
-                name="AppointmentInProgress4View"
-                component={AppointmentInProgress4View}
-            />
-            <WorkingStack.Screen
-                name="AppointmentInProgress5View"
-                component={AppointmentInProgress5View}
+                name="AppointmentInProgressView"
+                component={AppointmentInProgressView}
             />
             <WorkingStack.Screen name="ChatViewVer2" component={ChatViewVer2} />
         </WorkingStack.Navigator>

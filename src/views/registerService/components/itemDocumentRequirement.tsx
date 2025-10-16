@@ -35,7 +35,7 @@ const ItemDocumentRequirement: React.FC<ItemDocumentProps> = ({
     return (
         <TouchableOpacity style={styles.container} onPress={handleNavigation}>
             <View style={styles.content}>
-                <Text style={[DefaultStyles.textMedium12Black, { width: '50%' }]}>
+                <Text style={[DefaultStyles.textMedium14Black, { width: '50%' }]}>
                     {' '}
                     {index + 1}. {label}
                 </Text>

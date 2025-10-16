@@ -1,7 +1,17 @@
 import React, { useState } from 'react'
-import { StyleSheet, FlatList, View, Text, ScrollView, TextInput } from 'react-native'
+import {
+    StyleSheet,
+    FlatList,
+    View,
+    Text,
+    ScrollView,
+    TextInput,
+    Image,
+    Dimensions,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { DefaultStyles } from '../../styles/DefaultStyles'
+import { Colors } from '../../styles/Colors'
 import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
 import Button from '../components/Button'
@@ -70,41 +80,146 @@ const DetailOrderView = ({ route }: any) => {
     }
 
     return (
-        <SafeAreaView style={[DefaultStyles.container, { borderWidth: 1 }]} edges={['top']}>
+        <SafeAreaView style={[DefaultStyles.container]} edges={['top']}>
             <Header isBack title="Chi Tiết Yêu Cầu" />
-            <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.service}</Text>
-                <Text>{item.describe}</Text>
-                <Text>{item.address}</Text>
-                <Text>{item.rangePrice}</Text>
-                <Text>Trạng thái: {item.status}</Text>
-                <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Ảnh:</Text>
-            </View>
-            <Button
-                title="Báo giá"
-                containerStyle={{ margin: 10, marginBottom: 20 }}
-                onPress={() => {
-                    setIsModalVisible(true)
-                }}
-            />
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* Service Card */}
+                <View style={styles.serviceCard}>
+                    <View style={styles.serviceHeader}>
+                        <Text style={[DefaultStyles.textBold22Black, { flex: 1 }]}>
+                            {item.service}
+                        </Text>
+                        <View
+                            style={[
+                                styles.statusBadge,
+                                {
+                                    backgroundColor:
+                                        item.status === 'Hoạt động'
+                                            ? Colors.greenD6
+                                            : Colors.grayF5,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    DefaultStyles.textBold12Black,
+                                    {
+                                        color:
+                                            item.status === 'Hoạt động'
+                                                ? Colors.green34
+                                                : Colors.gray72,
+                                    },
+                                ]}
+                            >
+                                {item.status}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
 
+                {/* Description */}
+                <View style={styles.section}>
+                    <Text style={[DefaultStyles.textBold16Black, { marginBottom: 8 }]}>
+                        Mô tả dự án
+                    </Text>
+                    <Text style={[DefaultStyles.textRegular14Gray, { lineHeight: 22 }]}>
+                        {item.describe}
+                    </Text>
+                </View>
+
+                {/* Address */}
+                <View style={styles.section}>
+                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
+                        📍 Địa chỉ
+                    </Text>
+                    <Text style={[DefaultStyles.textRegular14Black, { color: Colors.gray72 }]}>
+                        {item.address}
+                    </Text>
+                </View>
+
+                {/* Price Range */}
+                <View style={styles.section}>
+                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
+                        💰 Tầm giá (Giá tham khảo)
+                    </Text>
+                    <View style={styles.priceBox}>
+                        <Text style={[DefaultStyles.textBold16Black, { color: Colors.primary700 }]}>
+                            {item.rangePrice}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Images */}
+                <View style={styles.section}>
+                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 10 }]}>
+                        🖼️ Hình ảnh
+                    </Text>
+                    {item.images && item.images.length > 0 ? (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={{ marginLeft: -16 }}
+                        >
+                            {item.images.map((image: string, index: number) => (
+                                <Image
+                                    key={index}
+                                    source={{ uri: image }}
+                                    style={styles.imageItem}
+                                />
+                            ))}
+                        </ScrollView>
+                    ) : (
+                        <Text style={[DefaultStyles.textRegular13Gray]}>Không có hình ảnh</Text>
+                    )}
+                </View>
+
+                <Spacer height={20} />
+            </ScrollView>
+
+            {/* Action Button */}
+            <View style={styles.buttonContainer}>
+                <Button
+                    title="Báo giá"
+                    containerStyle={styles.button}
+                    onPress={() => {
+                        setIsModalVisible(true)
+                    }}
+                />
+            </View>
+
+            {/* Quotation Modal */}
             <CustomModal
                 visible={isModalVisible}
                 onClose={() => setIsModalVisible(false)}
-                configHeight={0.7}
+                configHeight={0.8}
             >
-                <ScrollView>
-                    <Input title="Ghi chú" value={note} onChangeText={(text) => setNote(text)} />
-                    <Spacer height={10} />
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <Text style={[DefaultStyles.textBold16Black, { marginBottom: 16 }]}>
+                        Gửi báo giá
+                    </Text>
+
                     <Input
-                        title="Báo giá"
+                        title="Ghi chú"
+                        value={note}
+                        area
+                        onChangeText={(text) => setNote(text)}
+                        placeholder="Nhập ghi chú của bạn"
+                    />
+                    <Spacer height={14} />
+
+                    <Input
+                        title="Báo giá (VNĐ)"
                         keyboardType="number-pad"
                         value={price}
                         onChangeText={(text) => setPrice(formatCurrency(text))}
                         placeholder="Nhập số tiền"
                     />
+                    <Spacer height={20} />
                 </ScrollView>
-                <Button title="Xác nhận" onPress={handleApplicant} disable={!price.trim()} />
+
+                <View style={styles.modalButtonContainer}>
+                    <Button title="Xác nhận" onPress={handleApplicant} disable={!price.trim()} />
+                </View>
             </CustomModal>
         </SafeAreaView>
     )
@@ -112,4 +227,58 @@ const DetailOrderView = ({ route }: any) => {
 
 export default DetailOrderView
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    content: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+    },
+    serviceCard: {
+        backgroundColor: Colors.whiteF2,
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: Colors.primary700,
+    },
+    serviceHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    section: {
+        marginBottom: 18,
+    },
+    priceBox: {
+        backgroundColor: Colors.whiteE5,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 8,
+        borderLeftWidth: 3,
+        borderLeftColor: Colors.primary700,
+    },
+    imageItem: {
+        width: 120,
+        height: 120,
+        borderRadius: 8,
+        marginRight: 12,
+        marginLeft: 16,
+    },
+    buttonContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 20,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: Colors.grayDE,
+    },
+    button: {
+        margin: 0,
+    },
+    modalButtonContainer: {},
+})

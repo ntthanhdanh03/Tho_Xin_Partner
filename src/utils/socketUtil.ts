@@ -22,6 +22,10 @@ export default class SocketUtil {
         this.socket.on('new_order', () => {
             DeviceEventEmitter.emit('new_order')
         })
+        this.socket.on('appointment_updated', (data) => {
+            console.log('📨 Nhận appointment-updated với data:', data)
+            DeviceEventEmitter.emit('appointment_updated', data)
+        })
         this.socket.on('chat.newMessage', (payload: { orderId: string; roomId: string }) => {
             console.log('📨 Nhận chat.newMessage với orderId , roomId:')
             DeviceEventEmitter.emit('chat.newMessage')
@@ -30,6 +34,9 @@ export default class SocketUtil {
         this.socket.on('select_applicant', (appointment: string) => {
             console.log('📨 Nhận select_applicant:', appointment)
             DeviceEventEmitter.emit('order.selectApplicant', appointment)
+        })
+        this.socket.on('transaction.top_up.success', (payload: string) => {
+            console.log('📨transaction.top_up.success:', payload)
         })
     }
 

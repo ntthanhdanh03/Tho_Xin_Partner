@@ -151,7 +151,6 @@ const AppointmentInProgress1View = () => {
     }
 
     const handleSwipe = () => {
-        // navigation.reset({ // index: 0, // routes: [ // { // name: 'AppointmentInProgress2View', // params: { dataAppointment }, // }, // ] as never, // })
         GlobalModalController.onActionChange((value: any) => {
             if (value) {
                 const postData = { status: 2 }
@@ -160,13 +159,7 @@ const AppointmentInProgress1View = () => {
                     typeUpdate: 'APPOINTMENT_UPDATE_IN_PROGRESS',
                     postData,
                 }
-                dispatch(
-                    updateAppointmentAction(dataUpdate, (res: any) => {
-                        if (res) {
-                            navigation.navigate(...(['AppointmentInProgress2View'] as never))
-                        }
-                    }),
-                )
+                dispatch(updateAppointmentAction(dataUpdate, (res: any) => {}))
             } else GlobalModalController.hideModal()
         })
         GlobalModalController.showModal({

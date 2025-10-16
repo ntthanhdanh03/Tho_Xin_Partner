@@ -14,7 +14,6 @@ import MapboxGL from '@rnmapbox/maps'
 import FastImage from 'react-native-fast-image'
 import { useDispatch, useSelector } from 'react-redux'
 import Geolocation from 'react-native-geolocation-service'
-import Modal from 'react-native-modal' // 👈 thêm
 
 import { Colors } from '../../styles/Colors'
 import { scaleModerate } from '../../styles/scaleDimensions'
@@ -29,6 +28,7 @@ import ListOrderView from './ListOrderView'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { getOrderAction } from '../../store/actions/orderAction'
 import { getAppointmentAction } from '../../store/actions/appointmentAction'
+import { startSocketBackground } from '../../services/backgroundSocket'
 
 MapboxGL.setAccessToken(
     'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A',
@@ -45,11 +45,15 @@ const HomeView = () => {
     const dispatch = useDispatch()
 
     useEffect(() => {
-        if (isOnline) {
-            SocketUtil.connect(authData?.user?._id, 'partner')
-        } else {
-            SocketUtil.disconnect()
+        const runSocket = async () => {
+            if (isOnline) {
+                SocketUtil.connect(authData?.user?._id, 'partner')
+            } else {
+                SocketUtil.disconnect()
+            }
         }
+
+        runSocket()
     }, [isOnline])
 
     useEffect(() => {
@@ -98,6 +102,7 @@ const HomeView = () => {
         <View style={styles.header}>
             <TouchableOpacity
                 onPress={() => navigation.navigate('PersonalInformationView' as never)}
+                style={styles.avatarWrapper}
             >
                 <FastImage
                     source={
@@ -107,18 +112,27 @@ const HomeView = () => {
                     }
                     style={styles.avatar}
                 />
+                <View style={styles.avatarBorder} />
             </TouchableOpacity>
 
-            <View style={styles.balanceBox}>
-                <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteAE }]}>
+            <TouchableOpacity
+                style={styles.balanceBox}
+                onPress={() => {
+                    navigation.navigate('CheckBalanceView' as never)
+                }}
+                activeOpacity={0.8}
+            >
+                <Text style={[DefaultStyles.textMedium14Black, { color: Colors.whiteFF }]}>
                     Xem số dư
                 </Text>
-            </View>
+            </TouchableOpacity>
 
-            <SwitchButton
-                isActive={isOnline}
-                onChange={(newActive: boolean) => setIsOnline(newActive)}
-            />
+            <View style={styles.switchWrapper}>
+                <SwitchButton
+                    isActive={isOnline}
+                    onChange={(newActive: boolean) => setIsOnline(newActive)}
+                />
+            </View>
         </View>
     )
 
@@ -146,17 +160,27 @@ const HomeView = () => {
                         })
                     }
                 }}
+                activeOpacity={0.8}
             >
-                <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteAE }]}>
-                    Danh sách chờ nhận
-                </Text>
+                <View style={styles.waitingContent}>
+                    <Text style={styles.waitingIcon}>📋</Text>
+                    <Text style={[DefaultStyles.textMedium16Black, { color: Colors.whiteFF }]}>
+                        Danh sách chờ nhận
+                    </Text>
+                </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={moveToUserLocation} style={styles.meButton}>
-                <Text style={{ color: 'white' }}>Me</Text>
+
+            <TouchableOpacity
+                onPress={moveToUserLocation}
+                style={styles.meButton}
+                activeOpacity={0.8}
+            >
+                <View style={styles.meButtonInner}>
+                    <Text style={styles.meIcon}>📍</Text>
+                </View>
             </TouchableOpacity>
         </View>
     )
-
     return (
         <SafeAreaView style={[DefaultStyles.container]}>
             <MapboxGL.MapView style={styles.map}>
@@ -197,55 +221,123 @@ const styles = StyleSheet.create({
     userMarker: {
         height: 18,
         width: 18,
-        backgroundColor: 'blue',
+        backgroundColor: Colors.primary300,
         borderRadius: 9,
         borderColor: '#fff',
-        borderWidth: 2,
+        borderWidth: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     header: {
         position: 'absolute',
-        margin: 10,
-        top: scaleModerate(30),
+        top: scaleModerate(40),
+        left: scaleModerate(16),
+        right: scaleModerate(16),
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '95%',
         alignItems: 'center',
+    },
+    avatarWrapper: {
+        position: 'relative',
     },
     avatar: {
-        height: scaleModerate(40),
-        width: scaleModerate(40),
-        borderRadius: 40,
+        height: scaleModerate(48),
+        width: scaleModerate(48),
+        borderRadius: scaleModerate(24),
+        borderWidth: 3,
+        borderColor: Colors.whiteFF,
+    },
+    avatarBorder: {
+        position: 'absolute',
+        height: scaleModerate(48),
+        width: scaleModerate(48),
+        borderRadius: scaleModerate(24),
+        borderWidth: 2,
+        borderColor: Colors.primary300,
+        top: 0,
+        left: 0,
     },
     balanceBox: {
-        height: scaleModerate(40),
-        width: '70%',
-        borderRadius: 10,
-        backgroundColor: Colors.gray44,
+        flex: 1,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        borderRadius: scaleModerate(24),
+        backgroundColor: Colors.primary,
+        marginHorizontal: scaleModerate(10),
+        paddingVertical: scaleModerate(12),
+        paddingHorizontal: scaleModerate(14),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 8,
+    },
+    balanceIcon: {
+        fontSize: 18,
+        marginRight: scaleModerate(8),
+    },
+    switchWrapper: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+        elevation: 5,
+        borderRadius: scaleModerate(20),
     },
     footer: {
         position: 'absolute',
-        margin: 10,
-        bottom: 10,
+        bottom: scaleModerate(30),
+        left: scaleModerate(16),
+        right: scaleModerate(16),
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '95%',
+        alignItems: 'center',
     },
     waitingBox: {
-        height: scaleModerate(40),
-        width: '70%',
-        borderRadius: 10,
+        flex: 1,
+        height: scaleModerate(44),
+        borderRadius: scaleModerate(28),
+        backgroundColor: Colors.primary,
+        marginRight: scaleModerate(12),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+        elevation: 10,
+    },
+    waitingContent: {
+        flex: 1,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.gray44,
+        paddingHorizontal: scaleModerate(20),
+    },
+    waitingIcon: {
+        fontSize: 20,
+        marginRight: scaleModerate(10),
     },
     meButton: {
-        height: scaleModerate(40),
-        width: '15%',
-        backgroundColor: Colors.primary,
-        borderRadius: 40,
+        height: scaleModerate(48),
+        width: scaleModerate(48),
+        borderRadius: scaleModerate(28),
+        backgroundColor: Colors.primary300,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 10,
+    },
+    meButtonInner: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    meIcon: {
+        fontSize: 24,
     },
 })

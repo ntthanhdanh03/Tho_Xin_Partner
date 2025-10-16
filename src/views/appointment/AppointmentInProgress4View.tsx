@@ -16,17 +16,16 @@ import Header from '../components/Header'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { uploadKycPhoto } from '../../services/uploadKycPhoto '
 import { updateAppointmentAction } from '../../store/actions/appointmentAction'
+import LoadingWaitingApproveView from '../components/LoadingWaitingApproveView'
 
 const AppointmentInProgress4View = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
-    const route = useRoute<any>()
-    const { dataAppointment } = route.params || {}
     const { data: appointmentData } = useSelector((store: any) => store.appointment)
-
     const [description, setDescription] = useState<string>('')
     const [price, setPrice] = useState<number>(0)
     const [images, setImages] = useState<string[]>([])
+    const [loading, setLoading] = useState(false)
     const [showCameraOption, setShowCameraOption] = useState(false)
 
     const handleUploadPhoto = async (image: any) => {
@@ -38,7 +37,6 @@ const AppointmentInProgress4View = () => {
 
     const handleConfirm = async () => {
         const postData = {
-            status: 5,
             agreedPrice: price,
             afterImages: {
                 images: images,
@@ -51,11 +49,10 @@ const AppointmentInProgress4View = () => {
             typeUpdate,
             postData,
         }
-        console.log('dataUpdate', dataUpdate)
         dispatch(
             updateAppointmentAction(dataUpdate, (data: any) => {
                 if (data) {
-                    navigation.navigate(...(['AppointmentInProgress5View'] as never))
+                    setLoading(true)
                 }
             }),
         )
@@ -155,6 +152,21 @@ const AppointmentInProgress4View = () => {
                     }}
                 />
             </View>
+
+            {loading && (
+                <LoadingWaitingApproveView
+                    loading={loading}
+                    text="Chờ khách hàng xác nhận trạng thái"
+                    onCancel={() => {
+                        console.log('Người dùng nhấn Hủy')
+                        setLoading(false)
+                    }}
+                    onConfirm={() => {
+                        console.log('Người dùng nhấn Xác nhận')
+                        handleConfirm()
+                    }}
+                />
+            )}
 
             <PhotoOptionsPicker
                 isVisible={showCameraOption}

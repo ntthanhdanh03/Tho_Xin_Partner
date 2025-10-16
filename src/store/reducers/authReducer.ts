@@ -80,6 +80,26 @@ const authReducer = (state = initialState, action: IAction) => {
             }
         }
 
+        case types.TOP_UP + types.SUCCESS: {
+            return {
+                ...state,
+                data: {
+                    ...state.data,
+                    user: {
+                        ...state.data?.user,
+                        partner: {
+                            ...state.data?.user?.partner,
+                            profile: {
+                                ...state.data?.user?.partner?.profile,
+                                balance: action.payload,
+                            },
+                        },
+                    },
+                },
+                loading: false,
+            }
+        }
+
         case types.CONNECT_SOCKET + types.SUCCESS: {
             return {
                 ...state,

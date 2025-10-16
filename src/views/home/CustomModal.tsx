@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     closeBtn: {
-        marginTop: 20,
+        marginTop: 10,
         padding: 12,
         borderRadius: 8,
         backgroundColor: 'black',

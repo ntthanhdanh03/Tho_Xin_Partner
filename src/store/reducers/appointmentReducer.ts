@@ -26,8 +26,6 @@ const appointmentReducer = (state = initialState, action: IAction) => {
         }
         case types.UPDATE_APPOINTMENT + types.SUCCESS: {
             const { data, typeUpdate } = action.payload
-            console.log('typeUpdateeeeeeeeeee', action.payload)
-            console.log('dataaaaaaaaaaaaaaaaaaaaa', data)
             if (typeUpdate === 'APPOINTMENT_UPDATE_IN_PROGRESS') {
                 return {
                     ...state,

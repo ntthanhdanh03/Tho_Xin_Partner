@@ -5,6 +5,7 @@ import chatReducer from './chatReducer'
 import appointmentReducer from './appointmentReducer'
 import settingReducer from './settingReducer'
 import locationReducer from './locationReducer'
+import transactionReducer from './transactionReducer'
 
 export const combinedReducers = combineReducers({
     auth: authReducer,
@@ -13,4 +14,5 @@ export const combinedReducers = combineReducers({
     appointment: appointmentReducer,
     setting: settingReducer,
     location: locationReducer,
+    transaction: transactionReducer,
 })
