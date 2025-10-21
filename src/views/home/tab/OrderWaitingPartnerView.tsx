@@ -32,9 +32,8 @@ const OrderWaitingPartnerView = () => {
             }}
             activeOpacity={0.7}
         >
-            {/* Header */}
             <View style={styles.cardHeader}>
-                <Text style={[DefaultStyles.textBold18Black, { flex: 1 }]}>{item.service}</Text>
+                <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>{item.service}</Text>
                 <View
                     style={[
                         styles.statusBadge,
@@ -43,21 +42,9 @@ const OrderWaitingPartnerView = () => {
                                 item.status === 'Hoạt động' ? Colors.greenD6 : Colors.grayF5,
                         },
                     ]}
-                >
-                    <Text
-                        style={[
-                            DefaultStyles.textBold12Black,
-                            {
-                                color: item.status === 'Hoạt động' ? Colors.green34 : Colors.gray72,
-                            },
-                        ]}
-                    >
-                        {item.status}
-                    </Text>
-                </View>
+                ></View>
             </View>
 
-            {/* Description */}
             <Text
                 style={[DefaultStyles.textRegular14Gray, styles.description, { lineHeight: 20 }]}
                 numberOfLines={2}
@@ -65,7 +52,6 @@ const OrderWaitingPartnerView = () => {
                 {item.describe}
             </Text>
 
-            {/* Address */}
             <View style={styles.infoRow}>
                 <Text style={styles.infoIcon}>📍</Text>
                 <Text style={[DefaultStyles.textRegular13Gray, { flex: 1 }]} numberOfLines={1}>
@@ -73,9 +59,10 @@ const OrderWaitingPartnerView = () => {
                 </Text>
             </View>
 
-            {/* Price */}
             <View style={styles.priceSection}>
-                <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>💰 Tầm giá</Text>
+                <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
+                    Giá tham khảo
+                </Text>
                 <Text style={[DefaultStyles.textBold16Black, { color: Colors.primary700 }]}>
                     {item.rangePrice}
                 </Text>
@@ -88,7 +75,6 @@ const OrderWaitingPartnerView = () => {
 
     const renderEmptyComponent = () => (
         <View style={styles.emptyContainer}>
-            <Text style={[DefaultStyles.textMedium18Black, { marginBottom: 8 }]}>😕</Text>
             <Text style={[DefaultStyles.textRegular14Gray, { textAlign: 'center' }]}>
                 Không có đơn nào đang chờ
             </Text>
@@ -117,7 +103,7 @@ export default OrderWaitingPartnerView
 
 const styles = StyleSheet.create({
     listContent: {
-        padding: scaleModerate(12),
+        padding: scaleModerate(2),
         flexGrow: 1,
     },
     card: {

@@ -53,6 +53,8 @@ const GlobalModal = () => {
 
     return (
         <Modal
+            presentationStyle="overFullScreen"
+            statusBarTranslucent
             isVisible={modalVisible}
             style={styles.modal}
             onModalHide={() => {
@@ -110,7 +112,11 @@ const styles = StyleSheet.create({
         padding: scaleModerate(20),
         borderRadius: scaleModerate(15),
     },
-    icon: { height: scaleModerate(80), width: scaleModerate(70), marginBottom: scaleModerate(5) },
+    icon: {
+        height: scaleModerate(80),
+        width: scaleModerate(70),
+        marginBottom: scaleModerate(5),
+    },
 })
 
 export default forwardRef(GlobalModal as any)

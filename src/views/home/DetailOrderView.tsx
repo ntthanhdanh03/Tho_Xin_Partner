@@ -83,76 +83,44 @@ const DetailOrderView = ({ route }: any) => {
         <SafeAreaView style={[DefaultStyles.container]} edges={['top']}>
             <Header isBack title="Chi Tiết Yêu Cầu" />
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Service Card */}
                 <View style={styles.serviceCard}>
                     <View style={styles.serviceHeader}>
-                        <Text style={[DefaultStyles.textBold22Black, { flex: 1 }]}>
+                        <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>
                             {item.service}
                         </Text>
-                        <View
-                            style={[
-                                styles.statusBadge,
-                                {
-                                    backgroundColor:
-                                        item.status === 'Hoạt động'
-                                            ? Colors.greenD6
-                                            : Colors.grayF5,
-                                },
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    DefaultStyles.textBold12Black,
-                                    {
-                                        color:
-                                            item.status === 'Hoạt động'
-                                                ? Colors.green34
-                                                : Colors.gray72,
-                                    },
-                                ]}
-                            >
-                                {item.status}
-                            </Text>
-                        </View>
                     </View>
                 </View>
 
-                {/* Description */}
                 <View style={styles.section}>
-                    <Text style={[DefaultStyles.textBold16Black, { marginBottom: 8 }]}>
-                        Mô tả dự án
+                    <Text style={[DefaultStyles.textMedium14Black, { marginBottom: 8 }]}>
+                        Mô tả tình trạng
                     </Text>
-                    <Text style={[DefaultStyles.textRegular14Gray, { lineHeight: 22 }]}>
+                    <Text style={[DefaultStyles.textRegular16Black, { lineHeight: 22 }]}>
                         {item.describe}
                     </Text>
                 </View>
 
-                {/* Address */}
                 <View style={styles.section}>
-                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
+                    <Text style={[DefaultStyles.textMedium14Black, { marginBottom: 6 }]}>
                         📍 Địa chỉ
                     </Text>
-                    <Text style={[DefaultStyles.textRegular14Black, { color: Colors.gray72 }]}>
-                        {item.address}
-                    </Text>
+                    <Text style={[DefaultStyles.textRegular16Black]}>{item.address}</Text>
                 </View>
 
-                {/* Price Range */}
                 <View style={styles.section}>
-                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
-                        💰 Tầm giá (Giá tham khảo)
+                    <Text style={[DefaultStyles.textMedium14Black, { marginBottom: 6 }]}>
+                        Giá tham khảo
                     </Text>
                     <View style={styles.priceBox}>
-                        <Text style={[DefaultStyles.textBold16Black, { color: Colors.primary700 }]}>
+                        <Text style={[DefaultStyles.textBold16Black, { color: Colors.green34 }]}>
                             {item.rangePrice}
                         </Text>
                     </View>
                 </View>
 
-                {/* Images */}
                 <View style={styles.section}>
-                    <Text style={[DefaultStyles.textBold14Black, { marginBottom: 10 }]}>
-                        🖼️ Hình ảnh
+                    <Text style={[DefaultStyles.textMedium14Black, { marginBottom: 10 }]}>
+                        Hình ảnh
                     </Text>
                     {item.images && item.images.length > 0 ? (
                         <ScrollView
@@ -176,7 +144,6 @@ const DetailOrderView = ({ route }: any) => {
                 <Spacer height={20} />
             </ScrollView>
 
-            {/* Action Button */}
             <View style={styles.buttonContainer}>
                 <Button
                     title="Báo giá"
@@ -187,7 +154,6 @@ const DetailOrderView = ({ route }: any) => {
                 />
             </View>
 
-            {/* Quotation Modal */}
             <CustomModal
                 visible={isModalVisible}
                 onClose={() => setIsModalVisible(false)}
@@ -256,12 +222,12 @@ const styles = StyleSheet.create({
         marginBottom: 18,
     },
     priceBox: {
-        backgroundColor: Colors.whiteE5,
+        backgroundColor: Colors.whiteF2,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 8,
         borderLeftWidth: 3,
-        borderLeftColor: Colors.primary700,
+        borderLeftColor: Colors.green34,
     },
     imageItem: {
         width: 120,

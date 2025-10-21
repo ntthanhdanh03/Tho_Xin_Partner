@@ -66,7 +66,7 @@ const AppointmentInProgress4View = () => {
                 <Spacer height={10} />
 
                 <Input
-                    title="Mô tả vấn đề của Khách"
+                    title="Mô tả trạng thái sau cùng"
                     area
                     value={description}
                     onChangeText={setDescription}
@@ -76,7 +76,7 @@ const AppointmentInProgress4View = () => {
                 <Spacer height={20} />
 
                 <Text style={{ ...DefaultStyles.textBold14Black, marginBottom: 8 }}>
-                    Tình trạng trước (Tối đa 5 ảnh)
+                    Tình trạng sau cùng (Tối đa 5 ảnh)
                 </Text>
                 <View style={styles.imagesWrapper}>
                     {images?.map((img, index) => (

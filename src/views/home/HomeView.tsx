@@ -5,6 +5,7 @@ import {
     PermissionsAndroid,
     Platform,
     SafeAreaView,
+    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -183,6 +184,7 @@ const HomeView = () => {
     )
     return (
         <SafeAreaView style={[DefaultStyles.container]}>
+            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <MapboxGL.MapView style={styles.map}>
                 {userLocation && (
                     <>
@@ -290,7 +292,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         position: 'absolute',
-        bottom: scaleModerate(30),
+        bottom: scaleModerate(16),
         left: scaleModerate(16),
         right: scaleModerate(16),
         flexDirection: 'row',
@@ -324,7 +326,7 @@ const styles = StyleSheet.create({
         height: scaleModerate(48),
         width: scaleModerate(48),
         borderRadius: scaleModerate(28),
-        backgroundColor: Colors.primary300,
+        backgroundColor: Colors.whiteAE,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -338,6 +340,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     meIcon: {
-        fontSize: 24,
+        fontSize: 20,
     },
 })

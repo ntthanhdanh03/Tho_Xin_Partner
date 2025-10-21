@@ -55,7 +55,7 @@ export default ListOrderView
 const styles = StyleSheet.create({
     content: {
         width: '100%',
-        padding: scaleModerate(16),
+
         justifyContent: 'center',
         alignItems: 'center',
     },

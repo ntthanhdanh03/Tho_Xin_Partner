@@ -82,12 +82,11 @@ const OrderApplicantView = ({ route }: any) => {
                     keyExtractor={(item) => item._id}
                     renderItem={({ item }) => (
                         <TouchableOpacity style={styles.card} activeOpacity={0.7}>
-                            {/* Header */}
                             <View style={styles.cardHeader}>
-                                <Text style={[DefaultStyles.textBold18Black, { flex: 1 }]}>
+                                <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>
                                     {item.service}
                                 </Text>
-                                <View style={styles.statusBadge}>
+                                {/* <View style={styles.statusBadge}>
                                     <Text
                                         style={[
                                             DefaultStyles.textBold12Black,
@@ -96,13 +95,12 @@ const OrderApplicantView = ({ route }: any) => {
                                     >
                                         {item.status.toUpperCase()}
                                     </Text>
-                                </View>
+                                </View> */}
                             </View>
 
-                            {/* Description */}
                             <Text
                                 style={[
-                                    DefaultStyles.textRegular14Gray,
+                                    DefaultStyles.textRegular14Black,
                                     styles.description,
                                     { lineHeight: 20 },
                                 ]}
@@ -111,39 +109,29 @@ const OrderApplicantView = ({ route }: any) => {
                                 {item.describe}
                             </Text>
 
-                            {/* Address */}
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoIcon}>📍</Text>
                                 <Text
-                                    style={[DefaultStyles.textRegular13Gray, { flex: 1 }]}
+                                    style={[DefaultStyles.textRegular14Black, { flex: 1 }]}
                                     numberOfLines={1}
                                 >
                                     {item.address}
                                 </Text>
                             </View>
 
-                            {/* Order ID */}
                             <Text style={[DefaultStyles.textRegular12Gray, styles.orderId]}>
                                 ID: {item._id}
                             </Text>
 
-                            {/* Action Buttons */}
                             <View style={styles.actionContainer}>
                                 <TouchableOpacity
                                     style={[styles.actionButton, styles.cancelButton]}
                                     onPress={() => handleCancelApplicant(item)}
                                     activeOpacity={0.7}
                                 >
-                                    <Text
-                                        style={[
-                                            DefaultStyles.textBold14Black,
-                                            { color: Colors.redFD },
-                                        ]}
-                                    >
-                                        ✕ Hủy báo giá
-                                    </Text>
+                                    <Text style={[DefaultStyles.textBold14White]}>Hủy báo giá</Text>
                                 </TouchableOpacity>
-                                <Spacer width={10} />
+                                <Spacer width={6} />
                                 <TouchableOpacity
                                     style={[styles.actionButton, styles.chatButton]}
                                     onPress={() => handleNavigationChat(item)}
@@ -155,7 +143,7 @@ const OrderApplicantView = ({ route }: any) => {
                                             { color: Colors.whiteFF },
                                         ]}
                                     >
-                                        💬 Liên hệ khách
+                                        Liên hệ khách
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -172,9 +160,7 @@ const OrderApplicantView = ({ route }: any) => {
 export default OrderApplicantView
 
 const styles = StyleSheet.create({
-    listContent: {
-        padding: scaleModerate(12),
-    },
+    listContent: {},
     card: {
         backgroundColor: Colors.whiteFF,
         borderRadius: 12,
@@ -225,15 +211,13 @@ const styles = StyleSheet.create({
     actionButton: {
         flex: 1,
         paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingHorizontal: 10,
+        borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
     },
     cancelButton: {
-        backgroundColor: Colors.whiteE6,
-        borderWidth: 1,
-        borderColor: Colors.redFD,
+        backgroundColor: Colors.red30,
     },
     chatButton: {
         backgroundColor: Colors.primary700,

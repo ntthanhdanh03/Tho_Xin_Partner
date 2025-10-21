@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useMemo } from 'react'
 import {
     View,
     Text,
@@ -133,6 +133,17 @@ const AppointmentInProgress1View = () => {
         fetchRoute()
     }, [userLocation, destination, isFocused])
 
+    // 👇 Tự zoom nhẹ ra khi vào màn hình
+    useEffect(() => {
+        if (userLocation && cameraRef.current && isFocused) {
+            cameraRef.current.setCamera({
+                centerCoordinate: userLocation,
+                zoomLevel: 13, // xa ra khi mới vào
+                animationDuration: 1000,
+            })
+        }
+    }, [userLocation, isFocused])
+
     const getBounds = (coords: [number, number][]) => {
         const lngs = coords.map((c) => c[0])
         const lats = coords.map((c) => c[1])
@@ -146,7 +157,11 @@ const AppointmentInProgress1View = () => {
 
     const moveToUserLocation = () => {
         if (userLocation && cameraRef.current) {
-            cameraRef.current.flyTo(userLocation, 1000)
+            cameraRef.current.setCamera({
+                centerCoordinate: userLocation,
+                zoomLevel: 16, // zoom gần hơn khi nhấn nút
+                animationDuration: 1000,
+            })
         }
     }
 
@@ -179,7 +194,11 @@ const AppointmentInProgress1View = () => {
             {/* 🗺️ Map */}
             {isFocused && userLocation && destination ? (
                 <MapboxGL.MapView style={styles.map}>
-                    <MapboxGL.Camera ref={cameraRef} />
+                    <MapboxGL.Camera
+                        ref={cameraRef}
+                        zoomLevel={13}
+                        centerCoordinate={userLocation}
+                    />
                     {route && (
                         <MapboxGL.ShapeSource
                             id="routeSource"
@@ -219,6 +238,7 @@ const AppointmentInProgress1View = () => {
                     <Text style={styles.infoValue}>{duration}</Text>
                 </View>
             </View>
+
             <View style={styles.bottom}>
                 <View
                     style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 }}
@@ -253,10 +273,22 @@ const AppointmentInProgress1View = () => {
                 <SwipeButton
                     title="Bạn đã tới địa điểm"
                     onSwipeSuccess={handleSwipe}
-                    containerStyles={{ borderRadius: 8 }}
+                    containerStyles={{
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        marginHorizontal: 16,
+                        marginBottom: 10,
+                    }}
                     railBackgroundColor={Colors.whiteAE}
                     railFillBackgroundColor={'rgba(0,0,0,0.4)'}
+                    railBorderColor={Colors.gray72}
+                    railFillBorderColor={Colors.whiteAE}
+                    railStyles={{ borderRadius: 8 }}
+                    thumbIconBorderColor="transparent"
+                    thumbIconBackgroundColor={Colors.gray44}
+                    thumbIconStyles={{ borderRadius: 4, width: 40, height: 40 }}
                     titleStyles={{ ...DefaultStyles.textBold16Black }}
+                    titleColor={Colors.black01}
                 />
             </View>
 

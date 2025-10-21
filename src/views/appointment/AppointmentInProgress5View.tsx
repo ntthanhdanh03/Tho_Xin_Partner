@@ -28,7 +28,7 @@ import {
     updateCompleteAppointmentAction,
 } from '../../store/actions/appointmentAction'
 
-const AppointmentInProgress4View = () => {
+const AppointmentInProgress5View = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
     const route = useRoute<any>()
@@ -51,6 +51,7 @@ const AppointmentInProgress4View = () => {
     const totalAmount = useMemo(() => {
         if (!appointmentInProgress) return 0
         let total = appointmentInProgress.laborCost || 0
+
         if (appointmentInProgress.additionalIssues?.length > 0) {
             const additionalCost = appointmentInProgress.additionalIssues.reduce(
                 (sum: number, issue: any) => sum + (issue.cost || 0),
@@ -58,6 +59,14 @@ const AppointmentInProgress4View = () => {
             )
             total += additionalCost
         }
+
+        if (
+            appointmentInProgress.promotionDiscount &&
+            appointmentInProgress.promotionDiscount > 0
+        ) {
+            total -= appointmentInProgress.promotionDiscount
+        }
+
         return total
     }, [appointmentInProgress])
 
@@ -227,6 +236,26 @@ const AppointmentInProgress4View = () => {
                         </>
                     )}
 
+                    {appointmentInProgress?.promotionCode && (
+                        <>
+                            <Spacer height={12} />
+                            <View style={styles.divider} />
+                            <Spacer height={12} />
+                            <View style={styles.costRow}>
+                                <Text style={[styles.costLabel]}>
+                                    Mã khuyến mãi ({appointmentInProgress.promotionCode})
+                                </Text>
+                                <Text style={[styles.costValue, { color: Colors.green34 }]}>
+                                    -
+                                    {(appointmentInProgress.promotionDiscount || 0).toLocaleString(
+                                        'vi-VN',
+                                    )}{' '}
+                                    đ
+                                </Text>
+                            </View>
+                        </>
+                    )}
+
                     <Spacer height={16} />
                     <View style={styles.divider} />
                     <Spacer height={16} />
@@ -306,7 +335,7 @@ const AppointmentInProgress4View = () => {
     )
 }
 
-export default AppointmentInProgress4View
+export default AppointmentInProgress5View
 
 const styles = StyleSheet.create({
     summaryCard: {

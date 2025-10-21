@@ -127,11 +127,13 @@ const RootNavigator = () => {
 
     useEffect(() => {
         const onForeground = () => {
-            console.log('🚀 APP_FOREGROUND')
-            console.log('authData?.user?._id APP_FOREGROUND', authData?.user?._id)
-            dispatch(getAppointmentAction({ partnerId: authData.user._id }))
-            dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
-            dispatch(getOrderAction({ typeService: authData.user.partner.kyc.choseField }))
+            if (authData) {
+                console.log('🚀 APP_FOREGROUND')
+                console.log('authData?.user?._id APP_FOREGROUND', authData?.user?._id)
+                dispatch(getAppointmentAction({ partnerId: authData.user._id }))
+                dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
+                dispatch(getOrderAction({ typeService: authData.user.partner.kyc.choseField }))
+            }
         }
 
         const onBackground = () => {

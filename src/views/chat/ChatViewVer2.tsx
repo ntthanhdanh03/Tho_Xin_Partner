@@ -6,20 +6,18 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import FastImage from 'react-native-fast-image'
 import { useNavigation, useRoute } from '@react-navigation/native'
-import Spacer from '../components/Spacer'
+import { useDispatch, useSelector } from 'react-redux'
+import { sendMessageAction } from '../../store/actions/chatAction'
 import { Colors } from '../../styles/Colors'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { scaleModerate } from '../../styles/scaleDimensions'
 import { ic_chevron_left } from '../../assets'
-import { useDispatch, useSelector } from 'react-redux'
-import { sendMessageAction } from '../../store/actions/chatAction'
 
 const ChatViewVer2 = () => {
     const route = useRoute()
@@ -29,13 +27,12 @@ const ChatViewVer2 = () => {
 
     const roomData = useSelector((store: any) => store.chat?.data?.rooms)
     const messageData = useSelector((store: any) => store.chat?.data?.messages)
-
     const { data: authData } = useSelector((store: any) => store.auth)
     const { dataRoomChat }: any = route.params || {}
 
     const [messages, setMessages] = useState<any[]>([])
     const [text, setText] = useState('')
-    const [inputHeight, setInputHeight] = useState(30)
+    const [inputHeight, setInputHeight] = useState(35)
     const [roomId, setRoomId] = useState()
 
     useEffect(() => {
@@ -43,7 +40,6 @@ const ChatViewVer2 = () => {
             (room: any) =>
                 room.orderId === dataRoomChat.orderId && room.clientId === dataRoomChat.clientId,
         )
-        console.log(foundRoom)
         setRoomId(foundRoom?._id)
         if (messageData && foundRoom?._id) {
             const filteredMessages = messageData.filter(
@@ -84,77 +80,74 @@ const ChatViewVer2 = () => {
                     isMe ? styles.sentMessage : styles.receivedMessage,
                 ]}
             >
-                <Text style={{ color: isMe ? 'white' : 'black' }}>{item.content}</Text>
+                <Text style={isMe ? styles.sentText : styles.receivedText}>{item.content}</Text>
+                <Text style={isMe ? styles.sentTime : styles.receivedTime}>
+                    {new Date().toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    })}
+                </Text>
             </View>
         )
     }
 
     return (
-        <SafeAreaView style={DefaultStyles.container}>
+        <SafeAreaView style={[DefaultStyles.container, { backgroundColor: 'white' }]}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={100}
             >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
                         onPress={() => navigation.goBack()}
+                        style={{ padding: 5, marginRight: 5 }}
                     >
-                        <FastImage style={{ height: 28, width: 28 }} source={ic_chevron_left} />
+                        <FastImage source={ic_chevron_left} style={{ width: 26, height: 26 }} />
                     </TouchableOpacity>
-                    <Spacer width={10} />
-                    <View>
-                        <Text style={DefaultStyles.textMedium16Black}>Khách hàng</Text>
-                    </View>
+                    <Text style={styles.headerTitle}>Khách hàng</Text>
                 </View>
 
-                {/* Danh sách tin nhắn */}
-                <View style={{ flex: 1 }}>
-                    <FlatList
-                        ref={flatListRef}
-                        data={messages}
-                        keyExtractor={(item) => item._id}
-                        renderItem={renderMessage}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ padding: 10 }}
-                        onContentSizeChange={() => {
-                            flatListRef.current?.scrollToEnd({ animated: true })
-                        }}
-                        onLayout={() => {
-                            flatListRef.current?.scrollToEnd({ animated: true })
-                        }}
-                    />
-                </View>
+                {/* Messages */}
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    keyExtractor={(item) => item._id}
+                    renderItem={renderMessage}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ padding: 10, paddingBottom: 20 }}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                />
 
+                {/* Input */}
                 <View style={styles.inputContainer}>
-                    <View style={styles.inputBox}>
-                        <Spacer width={10} />
+                    <View style={styles.inputWrapper}>
                         <TextInput
                             value={text}
-                            placeholder="Aa"
-                            style={{
-                                height: scaleModerate(inputHeight),
-                                width: '90%',
-                                color: 'black',
-                            }}
+                            placeholder="Nhập tin nhắn..."
+                            placeholderTextColor={Colors.gray72}
+                            style={[styles.textInput, { height: Math.max(40, inputHeight) }]}
                             multiline
-                            numberOfLines={2}
+                            maxLength={500}
                             onContentSizeChange={(e) => {
                                 const newHeight = e.nativeEvent.contentSize.height
-                                const maxHeight = scaleModerate(55)
+                                const maxHeight = 100
                                 setInputHeight(Math.min(newHeight, maxHeight))
                             }}
                             onChangeText={(val) => setText(val)}
                         />
+
+                        {text.trim() && (
+                            <TouchableOpacity
+                                style={styles.sendButton}
+                                onPress={handleSendMessages}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.sendIcon}>➤</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                    <Spacer width={10} />
-                    {text.trim() ? (
-                        <TouchableOpacity onPress={handleSendMessages}>
-                            <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>Gửi</Text>
-                        </TouchableOpacity>
-                    ) : null}
                 </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -164,50 +157,101 @@ const ChatViewVer2 = () => {
 export default ChatViewVer2
 
 const styles = StyleSheet.create({
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: scaleModerate(10),
-        borderBottomWidth: 1,
-        borderColor: Colors.border01,
-        paddingHorizontal: scaleModerate(10),
-    },
-    avatar: {
-        height: scaleModerate(35),
-        width: scaleModerate(35),
-        borderRadius: scaleModerate(35),
-        borderWidth: 1,
-    },
     messageContainer: {
-        marginVertical: 5,
-        padding: scaleModerate(10),
-        borderRadius: 8,
-        maxWidth: '80%',
+        marginVertical: scaleModerate(4),
+        paddingHorizontal: scaleModerate(14),
+        paddingVertical: scaleModerate(10),
+        borderRadius: scaleModerate(18),
+        maxWidth: '75%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
     },
     sentMessage: {
         alignSelf: 'flex-end',
         backgroundColor: Colors.primary,
+        borderBottomRightRadius: scaleModerate(4),
     },
     receivedMessage: {
         alignSelf: 'flex-start',
-        backgroundColor: '#ECECEC',
+        backgroundColor: Colors.whiteFF,
+        borderBottomLeftRadius: scaleModerate(4),
+        borderWidth: 1,
+        borderColor: Colors.border01,
+    },
+    sentText: {
+        color: Colors.whiteFF,
+        fontSize: 15,
+        lineHeight: 20,
+    },
+    receivedText: {
+        color: Colors.black1B,
+        fontSize: 15,
+        lineHeight: 20,
+    },
+    sentTime: {
+        color: Colors.whiteFF,
+        fontSize: 11,
+        marginTop: scaleModerate(4),
+        opacity: 0.7,
+        alignSelf: 'flex-end',
+    },
+    receivedTime: {
+        color: Colors.gray72,
+        fontSize: 11,
+        marginTop: scaleModerate(4),
+        alignSelf: 'flex-end',
     },
     inputContainer: {
+        paddingHorizontal: scaleModerate(12),
+        paddingVertical: scaleModerate(10),
         borderTopWidth: 1,
-        flexDirection: 'row',
-        width: '100%',
         borderColor: Colors.border01,
-        alignItems: 'center',
-        paddingVertical: 5,
-        paddingHorizontal: scaleModerate(15),
     },
-    inputBox: {
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        backgroundColor: Colors.grayF5,
+        borderRadius: scaleModerate(24),
+        paddingHorizontal: scaleModerate(6),
+        paddingVertical: scaleModerate(6),
+    },
+    textInput: {
         flex: 1,
-        borderWidth: 1,
-        borderRadius: 30,
-        borderColor: Colors.border01,
+        color: Colors.black1B,
+        fontSize: 15,
+        paddingHorizontal: scaleModerate(8),
+        paddingTop: scaleModerate(10),
+        paddingBottom: scaleModerate(10),
+        maxHeight: 100,
+    },
+    sendButton: {
+        width: scaleModerate(36),
+        height: scaleModerate(36),
+        borderRadius: scaleModerate(18),
+        backgroundColor: Colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: scaleModerate(4),
+    },
+    sendIcon: {
+        color: Colors.whiteFF,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 5,
+        paddingHorizontal: scaleModerate(12),
+        paddingVertical: scaleModerate(10),
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border01,
+    },
+    headerTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#111',
     },
 })
