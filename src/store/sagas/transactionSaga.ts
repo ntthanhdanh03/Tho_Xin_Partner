@@ -64,18 +64,48 @@ function* getHistoryTransactionSaga({
     callback,
 }: ReturnType<typeof actions.getHistoryTransactionAction>) {
     try {
-        const response: IResponse = yield call(() => api.get(`/payment/user/${payload.partnerId}`))
-        console.log('***getHistoryTransaction', response)
-        if (response && response?.status === 200 && response?.data) {
-            callback && callback(response?.data, null)
+        const { partnerId, type, range, month, week, year, startDate, endDate } = payload
+        const query = new URLSearchParams()
+        if (type) query.append('type', type)
+        if (range) query.append('range', range)
+        if (year) query.append('year', String(year))
+        if (month && range === 'month') query.append('month', String(month))
+        if (week && range === 'week') query.append('week', String(week))
+        if (startDate) query.append('startDate', startDate)
+        if (endDate) query.append('endDate', endDate)
+
+        const response: IResponse = yield call(() =>
+            api.get(`/payment/user/${partnerId}?${query.toString()}`),
+        )
+
+        if (response && response.status === 200 && response.data) {
+            callback && callback(response.data, null)
         } else {
             callback && callback(null, 'failure')
         }
     } catch (e: any) {
-        console.log('getHistoryTransaction', e, e?.response)
+        console.log('❌ getHistoryTransactionSaga error:', e)
         callback && callback(null, 'failure')
     }
 }
+
+// function* getHistoryTransactionSaga({
+//     payload,
+//     callback,
+// }: ReturnType<typeof actions.getHistoryTransactionAction>) {
+//     try {
+//         const response: IResponse = yield call(() => api.get(`/payment/user/${payload.partnerId}`))
+//         console.log('***getHistoryTransaction', response)
+//         if (response && response?.status === 200 && response?.data) {
+//             callback && callback(response?.data, null)
+//         } else {
+//             callback && callback(null, 'failure')
+//         }
+//     } catch (e: any) {
+//         console.log('getHistoryTransaction', e, e?.response)
+//         callback && callback(null, 'failure')
+//     }
+// }
 
 export default function* transactionSaga() {
     yield all([

@@ -8,6 +8,7 @@ import {
     Linking,
     Platform,
     PermissionsAndroid,
+    StatusBar,
 } from 'react-native'
 import MapboxGL from '@rnmapbox/maps'
 import Geolocation from 'react-native-geolocation-service'
@@ -23,9 +24,14 @@ import { updateAppointmentAction } from '../../store/actions/appointmentAction'
 import { ic_check_select, ic_eye_off } from '../../assets'
 import { updateLocationPartnerAction } from '../../store/actions/locationAction'
 
-const MAPBOX_ACCESS_TOKEN =
-    'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A'
-MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN)
+// ✅ Import từ utils/MapboxConfig.ts
+import {
+    MAPVIEW_CONFIG,
+    CAMERA_CONFIG,
+    getDistance,
+    getBounds,
+    fetchRoute,
+} from '../../utils/mapboxUtils'
 
 const AppointmentInProgress1View = () => {
     const navigation = useNavigation()
@@ -45,25 +51,40 @@ const AppointmentInProgress1View = () => {
     const [distance, setDistance] = useState('')
     const [duration, setDuration] = useState('')
     const [loading, setLoading] = useState(true)
+    const [initialCameraSet, setInitialCameraSet] = useState(false)
+
+    const lastRouteLocationRef = useRef<[number, number] | null>(null)
+    const locationUpdateTimerRef = useRef<NodeJS.Timeout | null>(null)
 
     const destination: any = useMemo(() => {
         if (!order?.longitude || !order?.latitude) return null
         const lng = parseFloat(order.longitude)
         const lat = parseFloat(order.latitude)
         return !isNaN(lng) && !isNaN(lat) ? [lng, lat] : null
-    }, [order])
+    }, [order?.longitude, order?.latitude])
 
+    // ✅ Debounce gửi vị trí lên server
     useEffect(() => {
         if (!userLocation || !authData?.user?._id) return
-        const postData = {
-            userId: authData.user._id,
-            longitude: userLocation[0],
-            latitude: userLocation[1],
-            clientId: appointment?.clientId?._id || '',
-        }
-        dispatch(updateLocationPartnerAction({ postData }))
-    }, [userLocation])
 
+        if (locationUpdateTimerRef.current) clearTimeout(locationUpdateTimerRef.current)
+
+        locationUpdateTimerRef.current = setTimeout(() => {
+            const postData = {
+                userId: authData.user._id,
+                longitude: userLocation[0],
+                latitude: userLocation[1],
+                clientId: appointment?.clientId?._id || '',
+            }
+            dispatch(updateLocationPartnerAction({ postData }))
+        }, 3000)
+
+        return () => {
+            if (locationUpdateTimerRef.current) clearTimeout(locationUpdateTimerRef.current)
+        }
+    }, [userLocation, authData?.user?._id])
+
+    // ✅ Theo dõi vị trí người dùng (chỉ update khi di chuyển >10m)
     useEffect(() => {
         if (!isFocused) return
         let watchId: number | null = null
@@ -78,9 +99,15 @@ const AppointmentInProgress1View = () => {
                     return
                 }
             }
+
             watchId = Geolocation.watchPosition(
                 (pos) => {
-                    setUserLocation([pos.coords.longitude, pos.coords.latitude])
+                    const newLoc: [number, number] = [pos.coords.longitude, pos.coords.latitude]
+                    setUserLocation((prev) => {
+                        if (!prev) return newLoc
+                        const dist = getDistance(prev, newLoc)
+                        return dist > 10 ? newLoc : prev
+                    })
                 },
                 (err) => {
                     console.error('📍 Location error:', err)
@@ -89,8 +116,8 @@ const AppointmentInProgress1View = () => {
                 {
                     enableHighAccuracy: true,
                     distanceFilter: 10,
-                    interval: 5000,
-                    fastestInterval: 3000,
+                    interval: 10000,
+                    fastestInterval: 5000,
                 },
             )
         }
@@ -101,66 +128,48 @@ const AppointmentInProgress1View = () => {
         }
     }, [isFocused])
 
+    // ✅ Fetch route (chỉ khi di chuyển >50m)
     useEffect(() => {
         if (!isFocused || !userLocation || !destination) return
-        const fetchRoute = async () => {
-            try {
-                setLoading(true)
-                const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation[0]},${userLocation[1]};${destination[0]},${destination[1]}?geometries=geojson&access_token=${MAPBOX_ACCESS_TOKEN}`
-                const res = await fetch(url)
-                const data = await res.json()
-                if (data.routes?.[0]) {
-                    const r = data.routes[0]
-                    setRoute(r.geometry.coordinates)
-                    setDistance(`${(r.distance / 1000).toFixed(1)} km`)
-                    setDuration(`${Math.round(r.duration / 60)} phút`)
-                    if (cameraRef.current) {
-                        const bounds = getBounds([userLocation, destination])
-                        cameraRef.current.fitBounds(
-                            [bounds.minLng, bounds.minLat],
-                            [bounds.maxLng, bounds.maxLat],
-                            [100, 50, 350, 50],
-                            1000,
-                        )
-                    }
+
+        if (lastRouteLocationRef.current) {
+            const moved = getDistance(lastRouteLocationRef.current, userLocation)
+            if (moved < 50) return
+        }
+
+        const fetchRouteData = async () => {
+            setLoading(true)
+            const routeData = await fetchRoute(userLocation, destination)
+            if (routeData) {
+                setRoute(routeData.coordinates)
+                setDistance(routeData.distance)
+                setDuration(routeData.duration)
+                lastRouteLocationRef.current = userLocation
+
+                if (cameraRef.current && !initialCameraSet) {
+                    const bounds = getBounds([userLocation, destination])
+                    cameraRef.current.fitBounds(
+                        [bounds.minLng, bounds.minLat],
+                        [bounds.maxLng, bounds.maxLat],
+                        [100, 50, 350, 50],
+                        1000,
+                    )
+                    setInitialCameraSet(true)
                 }
-            } catch (err) {
-                console.error('❌ Fetch route failed:', err)
-            } finally {
-                setLoading(false)
             }
+            setLoading(false)
         }
-        fetchRoute()
+
+        const timer = setTimeout(fetchRouteData, 2000)
+        return () => clearTimeout(timer)
     }, [userLocation, destination, isFocused])
-
-    // 👇 Tự zoom nhẹ ra khi vào màn hình
-    useEffect(() => {
-        if (userLocation && cameraRef.current && isFocused) {
-            cameraRef.current.setCamera({
-                centerCoordinate: userLocation,
-                zoomLevel: 13, // xa ra khi mới vào
-                animationDuration: 1000,
-            })
-        }
-    }, [userLocation, isFocused])
-
-    const getBounds = (coords: [number, number][]) => {
-        const lngs = coords.map((c) => c[0])
-        const lats = coords.map((c) => c[1])
-        return {
-            minLng: Math.min(...lngs),
-            maxLng: Math.max(...lngs),
-            minLat: Math.min(...lats),
-            maxLat: Math.max(...lats),
-        }
-    }
 
     const moveToUserLocation = () => {
         if (userLocation && cameraRef.current) {
             cameraRef.current.setCamera({
                 centerCoordinate: userLocation,
-                zoomLevel: 16, // zoom gần hơn khi nhấn nút
-                animationDuration: 1000,
+                zoomLevel: CAMERA_CONFIG.zoomLevel,
+                animationDuration: CAMERA_CONFIG.animationDuration,
             })
         }
     }
@@ -174,7 +183,7 @@ const AppointmentInProgress1View = () => {
                     typeUpdate: 'APPOINTMENT_UPDATE_IN_PROGRESS',
                     postData,
                 }
-                dispatch(updateAppointmentAction(dataUpdate, (res: any) => {}))
+                dispatch(updateAppointmentAction(dataUpdate))
             } else GlobalModalController.hideModal()
         })
         GlobalModalController.showModal({
@@ -191,14 +200,28 @@ const AppointmentInProgress1View = () => {
 
     return (
         <View style={{ flex: 1 }}>
+            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
             {/* 🗺️ Map */}
             {isFocused && userLocation && destination ? (
-                <MapboxGL.MapView style={styles.map}>
+                <MapboxGL.MapView
+                    style={styles.map}
+                    styleURL={MAPVIEW_CONFIG.styleURL}
+                    compassEnabled={MAPVIEW_CONFIG.compassEnabled}
+                    logoEnabled={MAPVIEW_CONFIG.logoEnabled}
+                    attributionEnabled={MAPVIEW_CONFIG.attributionEnabled}
+                    pitchEnabled={MAPVIEW_CONFIG.pitchEnabled}
+                    rotateEnabled={MAPVIEW_CONFIG.rotateEnabled}
+                >
                     <MapboxGL.Camera
                         ref={cameraRef}
-                        zoomLevel={13}
+                        zoomLevel={CAMERA_CONFIG.zoomLevel}
                         centerCoordinate={userLocation}
+                        animationMode="none"
+                        minZoomLevel={MAPVIEW_CONFIG.minZoomLevel}
+                        maxZoomLevel={MAPVIEW_CONFIG.maxZoomLevel}
                     />
+
                     {route && (
                         <MapboxGL.ShapeSource
                             id="routeSource"
@@ -214,9 +237,11 @@ const AppointmentInProgress1View = () => {
                             />
                         </MapboxGL.ShapeSource>
                     )}
+
                     <MapboxGL.PointAnnotation id="userMarker" coordinate={userLocation}>
                         <View style={styles.userMarker} />
                     </MapboxGL.PointAnnotation>
+
                     <MapboxGL.PointAnnotation id="destMarker" coordinate={destination}>
                         <Text style={{ fontSize: 22 }}>📍</Text>
                     </MapboxGL.PointAnnotation>
@@ -227,7 +252,7 @@ const AppointmentInProgress1View = () => {
                 </View>
             )}
 
-            {/* 🧾 Info */}
+            {/* 🧾 Thông tin địa chỉ */}
             <View style={styles.infoCard}>
                 <Text style={styles.infoAddress}>{order?.address || 'Địa chỉ không xác định'}</Text>
                 <Spacer height={4} />
@@ -239,6 +264,7 @@ const AppointmentInProgress1View = () => {
                 </View>
             </View>
 
+            {/* 🧭 Nút thao tác */}
             <View style={styles.bottom}>
                 <View
                     style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 }}
@@ -292,6 +318,7 @@ const AppointmentInProgress1View = () => {
                 />
             </View>
 
+            {/* 🔘 Nút định vị */}
             <TouchableOpacity style={styles.meButton} onPress={moveToUserLocation}>
                 <Text style={{ fontSize: 22 }}>📍</Text>
             </TouchableOpacity>

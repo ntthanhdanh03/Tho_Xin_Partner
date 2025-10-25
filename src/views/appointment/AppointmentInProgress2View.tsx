@@ -89,10 +89,9 @@ const AppointmentInProgress2View = () => {
                     containerStyle={{ width: '100%' }}
                     message="Hãy trao đổi giá cả tiền công và vật tư với khách hàng trước khi nhập."
                     keyboardType="numeric"
-                    value={price ? `${price.toLocaleString('vi-VN')}` : ''}
-                    onChangeText={(txt) => {
-                        const numeric = txt.replace(/\D/g, '')
-                        setPrice(numeric ? parseInt(numeric, 10) : 0)
+                    value={price ? `${price}` : ''}
+                    onChangeText={(txt: any) => {
+                        setPrice(txt)
                     }}
                 />
 

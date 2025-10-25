@@ -25,6 +25,7 @@ import {
 import { getOrderAction } from '../store/actions/orderAction'
 import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
 import { getAppointmentAction } from '../store/actions/appointmentAction'
+import { CallModalComponent, default as CallModal } from './CallModal'
 
 const Stack = createNativeStackNavigator()
 
@@ -193,6 +194,8 @@ const RootNavigator = () => {
                 message={notif.message}
                 onHide={() => setNotif({ ...notif, visible: false })}
             />
+
+            <CallModalComponent ref={(ref) => CallModal.setRef(ref)} />
         </>
     )
 }

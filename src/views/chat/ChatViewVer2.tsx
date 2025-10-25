@@ -18,6 +18,7 @@ import { Colors } from '../../styles/Colors'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { scaleModerate } from '../../styles/scaleDimensions'
 import { ic_chevron_left } from '../../assets'
+import CallModal from '../../navigation/CallModal'
 
 const ChatViewVer2 = () => {
     const route = useRoute()
@@ -106,6 +107,14 @@ const ChatViewVer2 = () => {
                         <FastImage source={ic_chevron_left} style={{ width: 26, height: 26 }} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Khách hàng</Text>
+
+                    <TouchableOpacity
+                        onPress={() => {
+                            CallModal.show()
+                        }}
+                    >
+                        <Text style={{ textAlign: 'right' }}> GỌi</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Messages */}

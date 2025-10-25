@@ -20,7 +20,7 @@ const Tab = (props: ITab) => {
     }, [props?.selectedTab])
 
     return (
-        <View style={{ marginBottom: scaleModerate(16) }}>
+        <View style={{}}>
             <FlatList
                 ref={listRef}
                 showsHorizontalScrollIndicator={false}
@@ -82,6 +82,6 @@ const styles = StyleSheet.create({
         marginEnd: 5,
         borderColor: Colors.gray72,
         alignItems: 'center',
-        paddingVertical: scaleModerate(5),
+        paddingVertical: scaleModerate(6),
     },
 })

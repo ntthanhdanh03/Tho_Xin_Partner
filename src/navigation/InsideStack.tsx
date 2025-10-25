@@ -23,6 +23,8 @@ import TopUpAccountView from '../views/balance/TopUpAccountView'
 import SocketUtil from '../utils/socketUtil'
 import { startSocketBackground } from '../services/backgroundSocket'
 import RateHistoryView from '../views/profile/RateHistoryView'
+import AppointmentHistoryView from '../views/profile/AppointmentHistoryView'
+import AppointmentView from '../views/appointment/AppointmentView'
 
 const InStack = createNativeStackNavigator()
 
@@ -65,6 +67,8 @@ const InsideStack = () => {
             <InStack.Screen name="TopUpAccountView" component={TopUpAccountView} />
 
             <InStack.Screen name="RateHistoryView" component={RateHistoryView} />
+            <InStack.Screen name="AppointmentHistoryView" component={AppointmentHistoryView} />
+            <InStack.Screen name="AppointmentView" component={AppointmentView} />
         </InStack.Navigator>
     )
 }

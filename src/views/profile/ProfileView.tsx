@@ -138,13 +138,13 @@ const ProfileView = () => {
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => {
-                                    navigation.navigate('TransactionHistoryView' as never)
+                                    navigation.navigate('AppointmentHistoryView' as never)
                                 }}
                             >
                                 <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
                                     <FastImage source={ic_balence} style={styles.icon} />
                                 </View>
-                                <Text style={styles.text}>{t('Lịch sử')}</Text>
+                                <Text style={styles.text}>{t('Lịch sử cuộc hẹn')}</Text>
                                 <FastImage source={ic_balence} style={styles.rightIcon} />
                             </TouchableOpacity>
                         </View>

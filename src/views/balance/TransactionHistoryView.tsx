@@ -28,13 +28,11 @@ const TransactionHistoryView = () => {
 
         if (item.type === 'appointment') {
             if (item.paymentMethod === 'qr') {
-                // ✅ Thanh toán QR => +90%
-                displayAmount = item.amount * 0.9
+                displayAmount = item.amount * 0.8
                 sign = '+'
                 color = Colors.green34
             } else if (item.paymentMethod === 'cash') {
-                // ✅ Thanh toán tiền mặt => -10%
-                displayAmount = item.amount * 0.1
+                displayAmount = item.amount * 0.2 - +item.promotionDiscount
                 sign = '-'
                 color = Colors.red30
             }
@@ -43,7 +41,6 @@ const TransactionHistoryView = () => {
             sign = '+'
             color = Colors.green34
         }
-
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.rowBetween}>
@@ -54,6 +51,7 @@ const TransactionHistoryView = () => {
                               ? 'Nạp tiền'
                               : item.type}
                     </Text>
+
                     <Text style={[styles.amountText, { color }]}>
                         {sign}
                         {displayAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}đ

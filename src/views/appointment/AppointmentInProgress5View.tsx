@@ -1,14 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native'
 import React, { useEffect, useMemo, useState, useRef } from 'react'
-import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-    Image,
-    ActivityIndicator,
-    DeviceEventEmitter,
-} from 'react-native'
+import { ScrollView, StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -19,8 +11,7 @@ import { Colors } from '../../styles/Colors'
 import Header from '../components/Header'
 import Selection from '../components/Selection'
 import Button from '../components/Button'
-import { createQrPaidAction, createQrTopUpAction } from '../../store/actions/transactionAction'
-import { startSocketBackground } from '../../services/backgroundSocket'
+import { createQrPaidAction } from '../../store/actions/transactionAction'
 import SocketUtil from '../../utils/socketUtil'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import {
@@ -48,6 +39,7 @@ const AppointmentInProgress5View = () => {
         { key: 'qr', name: 'QR thanh toán' },
     ]
 
+    // 🔹 Tổng chi phí thực tế (hiển thị cho khách)
     const totalAmount = useMemo(() => {
         if (!appointmentInProgress) return 0
         let total = appointmentInProgress.laborCost || 0
@@ -70,6 +62,17 @@ const AppointmentInProgress5View = () => {
         return total
     }, [appointmentInProgress])
 
+    const originalAmount =
+        (appointmentInProgress.laborCost || 0) +
+        (appointmentInProgress.additionalIssues?.reduce(
+            (a: number, b: any) => a + (b.cost || 0),
+            0,
+        ) || 0)
+
+    useEffect(() => {
+        console.log('💰 Tổng thanh toán (đã trừ KM):', totalAmount)
+    }, [totalAmount])
+
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60)
         const s = seconds % 60
@@ -77,47 +80,54 @@ const AppointmentInProgress5View = () => {
     }
 
     useEffect(() => {
-        const handleTopUpSuccess = (payload: any) => {
+        const handlePaidSuccess = (payload: any) => {
+            console.log('✅ Nhận socket thanh toán thành công:', payload)
             dispatch(
                 getAppointmentAction({ partnerId: authData.user._id }, (data: any) => {
                     if (data) {
                         GlobalModalController.showModal({
                             title: 'Thành công',
                             description:
-                                'Khách hàng đã thanh toán thành công , cảm ơn Bác Thợ đã chăm chỉ làm việc !!!',
+                                'Khách hàng đã thanh toán thành công, cảm ơn Bác Thợ đã chăm chỉ làm việc !!!',
                             icon: 'success',
                         })
-                        GlobalModalController.onActionChange(() => {})
                     }
                 }),
             )
         }
-        SocketUtil.on('transaction.paid_appointment.success', handleTopUpSuccess)
+
+        SocketUtil.on('transaction.paid_appointment.success', handlePaidSuccess)
 
         return () => {
-            SocketUtil.off('transaction.top_up.success', handleTopUpSuccess)
-            if (timerRef.current) clearInterval(timerRef.current)
+            SocketUtil.off('transaction.paid_appointment.success', handlePaidSuccess)
+            if (timerRef.current) {
+                clearInterval(timerRef.current)
+                timerRef.current = null
+            }
         }
     }, [])
 
+    // 🔹 Tạo mã QR thanh toán
     const createQR = () => {
-        if (!authData?.user?._id) return
+        if (!authData?.user?._id || !appointmentInProgress) return
         setLoading(true)
         setQrUrl(null)
+
         dispatch(
             createQrPaidAction(
                 {
-                    amount: '2000',
-                    clientId: appointmentInProgress?.clientId?._id,
-                    partnerId: appointmentInProgress?.partnerId,
+                    amount: totalAmount,
+                    clientId: appointmentInProgress.clientId?._id,
+                    partnerId: appointmentInProgress.partnerId,
                     appointmentId: appointmentInProgress._id,
                 },
                 (url: string, error: string) => {
                     setLoading(false)
                     if (error) {
-                        console.log('❌ QR lỗi:', error)
+                        console.log('❌ Lỗi tạo QR:', error)
                         return
                     }
+
                     setQrUrl(url)
                     setCountdown(600)
                     if (timerRef.current) clearInterval(timerRef.current)
@@ -125,6 +135,7 @@ const AppointmentInProgress5View = () => {
                         setCountdown((prev) => {
                             if (prev <= 1) {
                                 clearInterval(timerRef.current!)
+                                timerRef.current = null
                                 setQrUrl(null)
                                 return 0
                             }
@@ -136,33 +147,31 @@ const AppointmentInProgress5View = () => {
         )
     }
 
+    // 🔹 Hoàn tất cuộc hẹn (thanh toán tiền mặt)
     const handleCompleteAppointment = () => {
         GlobalModalController.onActionChange((value: boolean) => {
-            if (value) {
+            if (value && appointmentInProgress) {
                 dispatch(
                     updateCompleteAppointmentAction(
                         {
                             appointmentId: appointmentInProgress._id,
                             postData: {
                                 partnerId: appointmentInProgress?.partnerId,
-                                amount: 2000,
-                                paymentMethod: 'cash',
+                                amount: originalAmount,
+                                paymentMethod: paymentMethod || 'cash',
                             },
                         },
                         (data: any) => {
                             if (data) {
                                 dispatch(
-                                    getAppointmentAction(
-                                        { partnerId: authData.user._id },
-                                        (data: any) => {
-                                            GlobalModalController.showModal({
-                                                title: 'Thành công',
-                                                description:
-                                                    'Hoàn thành cuộc hẹn Thành Công , cảm ơn Bác Thợ đã chăm chỉ làm việc !!!',
-                                                icon: 'success',
-                                            })
-                                        },
-                                    ),
+                                    getAppointmentAction({ partnerId: authData.user._id }, () => {
+                                        GlobalModalController.showModal({
+                                            title: 'Thành công',
+                                            description:
+                                                'Hoàn thành cuộc hẹn thành công, cảm ơn Bác Thợ đã chăm chỉ làm việc !!!',
+                                            icon: 'success',
+                                        })
+                                    }),
                                 )
                             }
                         },
@@ -172,26 +181,23 @@ const AppointmentInProgress5View = () => {
                 GlobalModalController.hideModal()
             }
         })
+
         GlobalModalController.showModal({
             title: 'Xác nhận kiểm tra lần cuối?',
             description:
-                'Hãy chắc chắn rằng bạn đã kiểm tra kỹ tình trạng công việc của khách hàng trước khi bắt đầu công việc.',
+                'Hãy chắc chắn rằng bạn đã kiểm tra kỹ tình trạng công việc của khách hàng trước khi xác nhận hoàn thành.',
             type: 'yesNo',
             icon: 'warning',
         })
     }
 
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current)
-        }
-    }, [])
-
     return (
         <SafeAreaView style={DefaultStyles.container}>
             <Header title="Thanh toán" />
+
             <ScrollView style={{ ...DefaultStyles.wrapBody, flex: 1 }}>
                 <Spacer height={10} />
+                {/* 🔹 Thông tin thanh toán */}
                 <View style={styles.summaryCard}>
                     <View style={styles.cardHeader}>
                         <FastImage
@@ -203,7 +209,6 @@ const AppointmentInProgress5View = () => {
                     </View>
 
                     <Spacer height={16} />
-
                     <View style={styles.costRow}>
                         <Text style={styles.costLabel}>Chi phí lao động</Text>
                         <Text style={styles.costValue}>
@@ -216,7 +221,6 @@ const AppointmentInProgress5View = () => {
                             <Spacer height={12} />
                             <View style={styles.divider} />
                             <Spacer height={12} />
-
                             {appointmentInProgress.additionalIssues.map(
                                 (issue: any, index: number) => (
                                     <View key={issue._id || index}>
@@ -269,13 +273,14 @@ const AppointmentInProgress5View = () => {
                 </View>
 
                 <Spacer height={10} />
+
+                {/* 🔹 Chọn phương thức thanh toán */}
                 <Selection
                     title="Phương thức thanh toán"
                     data={paymentMethods}
                     keyValue={paymentMethod}
                     onSelect={(selectedItem: any) => {
                         setPaymentMethod(selectedItem?.key)
-                        console.log('Selected fields:', selectedItem)
                     }}
                 />
                 <Spacer height={4} />
@@ -283,6 +288,7 @@ const AppointmentInProgress5View = () => {
                     Hãy trao đổi với khách hàng về phương thức trước khi chọn (*)
                 </Text>
 
+                {/* 🔹 QR hiển thị */}
                 {paymentMethod === 'qr' && (
                     <>
                         <Spacer height={20} />
@@ -313,14 +319,13 @@ const AppointmentInProgress5View = () => {
                         </View>
                     </>
                 )}
+                <Spacer height={10} />
             </ScrollView>
 
+            {/* 🔹 Nút hành động */}
             <View style={{ margin: 10 }}>
                 {paymentMethod === 'cash' ? (
-                    <Button
-                        title="Khách hàng đã thanh toán"
-                        onPress={() => handleCompleteAppointment()}
-                    />
+                    <Button title="Khách hàng đã thanh toán" onPress={handleCompleteAppointment} />
                 ) : paymentMethod === 'qr' ? (
                     <Button
                         title={countdown > 0 ? 'Đang chờ thanh toán...' : 'Tạo mã QR thanh toán'}
@@ -337,6 +342,8 @@ const AppointmentInProgress5View = () => {
 
 export default AppointmentInProgress5View
 
+// =================== STYLES ===================
+
 const styles = StyleSheet.create({
     summaryCard: {
         backgroundColor: Colors.whiteFF,
@@ -345,15 +352,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.border01,
     },
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    iconBalance: {
-        width: 24,
-        height: 24,
-    },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconBalance: { width: 24, height: 24 },
     cardTitle: { ...DefaultStyles.textBold18Black },
     costRow: {
         flexDirection: 'row',
@@ -363,16 +363,9 @@ const styles = StyleSheet.create({
     costLabel: { ...DefaultStyles.textMedium14Black, flex: 1 },
     costValue: { ...DefaultStyles.textBold16Black },
     divider: { height: 1, backgroundColor: Colors.border01 },
-    totalRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
+    totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     totalLabel: { ...DefaultStyles.textBold16Black },
-    totalAmount: {
-        ...DefaultStyles.textBold18Black,
-        color: Colors.primary,
-    },
+    totalAmount: { ...DefaultStyles.textBold18Black, color: Colors.primary },
     qrBox: {
         padding: 10,
         borderWidth: 1,
@@ -385,8 +378,5 @@ const styles = StyleSheet.create({
         minHeight: 260,
         backgroundColor: Colors.whiteAE,
     },
-    timerText: {
-        color: Colors.red30,
-        fontWeight: 'bold',
-    },
+    timerText: { color: Colors.red30, fontWeight: 'bold' },
 })

@@ -11,6 +11,17 @@ export const getAppointmentSuccessAction = (data: any) => ({
     payload: data,
 })
 
+export const getAppointmentByIdAction = (data: any, callback?: any) => ({
+    type: types.GET_APPOINTMENT_BY_ID,
+    payload: data,
+    callback,
+})
+
+export const getAppointmentByIdSuccessAction = (data: any) => ({
+    type: types.GET_APPOINTMENT_BY_ID + types.SUCCESS,
+    payload: data,
+})
+
 export const updateAppointmentAction = (data: any, callback?: any) => ({
     type: types.UPDATE_APPOINTMENT,
     payload: data,

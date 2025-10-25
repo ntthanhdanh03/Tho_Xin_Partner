@@ -1,4 +1,4 @@
-import React, { useDebugValue, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import {
     DeviceEventEmitter,
     Dimensions,
@@ -30,20 +30,70 @@ import GlobalModalController from '../components/GlobalModal/GlobalModalControll
 import { getOrderAction } from '../../store/actions/orderAction'
 import { getAppointmentAction } from '../../store/actions/appointmentAction'
 import { startSocketBackground } from '../../services/backgroundSocket'
+import {
+    MAPVIEW_CONFIG,
+    CAMERA_CONFIG,
+    getDistance,
+    type Coordinate,
+} from '../../utils/mapboxUtils'
 
-MapboxGL.setAccessToken(
-    'pk.eyJ1IjoibnR0aGFuaGRhbmgiLCJhIjoiY21ldGhobmRwMDNrcTJscjg5YTRveGU0MyJ9.1-2B8UCQL1fjGqTd60Le9A',
+// ✅ Memoize MapView component để prevent re-renders
+const MemoizedMapView = React.memo(
+    ({
+        userLocation,
+        cameraRef,
+    }: {
+        userLocation: Coordinate | null
+        cameraRef: React.RefObject<MapboxGL.Camera | null>
+    }) => {
+        return (
+            <MapboxGL.MapView
+                style={styles.map}
+                // ✅ Áp dụng config từ utils để giảm tiles
+                styleURL={MAPVIEW_CONFIG.styleURL}
+                compassEnabled={MAPVIEW_CONFIG.compassEnabled}
+                scaleBarEnabled={MAPVIEW_CONFIG.scaleBarEnabled}
+                logoEnabled={MAPVIEW_CONFIG.logoEnabled}
+                attributionEnabled={MAPVIEW_CONFIG.attributionEnabled}
+                pitchEnabled={MAPVIEW_CONFIG.pitchEnabled}
+                rotateEnabled={MAPVIEW_CONFIG.rotateEnabled}
+            >
+                {userLocation && (
+                    <>
+                        {/* ✅ Camera không có animationMode - chỉ set vị trí ban đầu */}
+                        <MapboxGL.Camera
+                            ref={cameraRef}
+                            zoomLevel={CAMERA_CONFIG.zoomLevel}
+                            centerCoordinate={userLocation}
+                            minZoomLevel={MAPVIEW_CONFIG.minZoomLevel}
+                            maxZoomLevel={MAPVIEW_CONFIG.maxZoomLevel}
+                        />
+                        <MapboxGL.PointAnnotation id="userMarker" coordinate={userLocation}>
+                            <View style={styles.userMarker} />
+                        </MapboxGL.PointAnnotation>
+                    </>
+                )}
+            </MapboxGL.MapView>
+        )
+    },
 )
 
 const HomeView = () => {
     const { data: authData } = useSelector((store: any) => store.auth)
     const { data: appointmentData } = useSelector((store: any) => store.appointment)
-    const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+
+    const [userLocation, setUserLocation] = useState<Coordinate | null>(null)
     const [isModalVisible, setIsModalVisible] = useState(false)
     const [isOnline, setIsOnline] = useState(false)
+
     const cameraRef = useRef<MapboxGL.Camera>(null)
     const navigation = useNavigation()
     const dispatch = useDispatch()
+
+    // ✅ Sử dụng ref để track location mà không trigger re-render
+    const userLocationRef = useRef<Coordinate | null>(null)
+    const isFirstLocationRef = useRef(true)
+    const lastUpdateRef = useRef<number>(0) // Track last update time
 
     useEffect(() => {
         const runSocket = async () => {
@@ -55,7 +105,21 @@ const HomeView = () => {
         }
 
         runSocket()
-    }, [isOnline])
+    }, [isOnline, authData?.user?._id])
+
+    // ✅ Kiểm tra xem location có thay đổi đáng kể không (sử dụng utils helper)
+    const hasSignificantChange = useCallback(
+        (oldLoc: Coordinate | null, newLoc: Coordinate): boolean => {
+            if (!oldLoc) return true
+
+            // ✅ Sử dụng getDistance từ utils (chính xác hơn)
+            const distance = getDistance(oldLoc, newLoc)
+
+            // Chỉ update nếu di chuyển > 15 meters
+            return distance > 15
+        },
+        [],
+    )
 
     useEffect(() => {
         let watchId: number | null = null
@@ -72,16 +136,44 @@ const HomeView = () => {
 
             watchId = Geolocation.watchPosition(
                 (pos) => {
-                    const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude]
-                    setUserLocation(coords)
-                    cameraRef.current?.moveTo(coords, 500)
+                    const coords: Coordinate = [pos.coords.longitude, pos.coords.latitude]
+
+                    // ✅ Lưu vào ref trước, chỉ update state nếu cần
+                    userLocationRef.current = coords
+
+                    // ✅ Throttle updates: chỉ update tối đa mỗi 3s
+                    const now = Date.now()
+                    const timeSinceLastUpdate = now - lastUpdateRef.current
+
+                    if (timeSinceLastUpdate < 3000 && !isFirstLocationRef.current) {
+                        return // Skip update nếu chưa đủ 3s
+                    }
+
+                    // ✅ Chỉ update state khi có thay đổi đáng kể
+                    if (hasSignificantChange(userLocation, coords)) {
+                        setUserLocation(coords)
+                        lastUpdateRef.current = now
+                    }
+
+                    // ✅ Chỉ di chuyển camera lần đầu tiên
+                    if (isFirstLocationRef.current) {
+                        cameraRef.current?.setCamera({
+                            centerCoordinate: coords,
+                            zoomLevel: CAMERA_CONFIG.zoomLevel,
+                            animationDuration: CAMERA_CONFIG.animationDuration,
+                        })
+                        isFirstLocationRef.current = false
+                    }
+                    // ⚠️ QUAN TRỌNG: Không gọi moveTo() hoặc flyTo() trong watchPosition
+                    // Đây là nguyên nhân chính gây ra hàng triệu tile requests!
                 },
                 (err) => console.error(err),
                 {
                     enableHighAccuracy: true,
-                    distanceFilter: 0.5,
-                    interval: 1000,
-                    fastestInterval: 2000,
+                    // ✅ Tăng distance filter để giảm update frequency
+                    distanceFilter: 15, // Chỉ update khi di chuyển > 15m
+                    interval: 5000, // Check mỗi 5s
+                    fastestInterval: 3000, // Tối thiểu 3s giữa các updates
                 },
             )
         }
@@ -91,20 +183,55 @@ const HomeView = () => {
         return () => {
             if (watchId != null) Geolocation.clearWatch(watchId)
         }
-    }, [])
+    }, [userLocation, hasSignificantChange])
 
-    const moveToUserLocation = () => {
-        if (cameraRef.current && userLocation) {
-            cameraRef.current.flyTo(userLocation, 1000)
+    // ✅ Chỉ di chuyển camera khi user ấn nút, không tự động
+    const moveToUserLocation = useCallback(() => {
+        // Sử dụng location từ ref (luôn mới nhất) thay vì state
+        const currentLocation = userLocationRef.current || userLocation
+
+        if (cameraRef.current && currentLocation) {
+            cameraRef.current.setCamera({
+                centerCoordinate: currentLocation,
+                zoomLevel: 16, // Zoom gần hơn khi user request
+                animationDuration: CAMERA_CONFIG.animationDuration,
+            })
         }
-    }
+    }, [userLocation])
+
+    // ✅ Memoize handlers để tránh re-create functions
+    const handleNavigateToProfile = useCallback(() => {
+        navigation.navigate('PersonalInformationView' as never)
+    }, [navigation])
+
+    const handleNavigateToBalance = useCallback(() => {
+        navigation.navigate('CheckBalanceView' as never)
+    }, [navigation])
+
+    const handleShowWaitingList = useCallback(() => {
+        if (authData?.user?.partner?.profile?.isOnline === true) {
+            dispatch(
+                getOrderAction(
+                    { typeService: authData?.user?.partner?.kyc?.choseField },
+                    (data: any) => {
+                        if (data) {
+                            setIsModalVisible(true)
+                        }
+                    },
+                ),
+            )
+        } else {
+            GlobalModalController.showModal({
+                title: 'Thất bại',
+                description: 'Vui lòng bật trạng thái hoạt động',
+                icon: 'fail',
+            })
+        }
+    }, [authData?.user?.partner, dispatch])
 
     const renderHeader = () => (
         <View style={styles.header}>
-            <TouchableOpacity
-                onPress={() => navigation.navigate('PersonalInformationView' as never)}
-                style={styles.avatarWrapper}
-            >
+            <TouchableOpacity onPress={handleNavigateToProfile} style={styles.avatarWrapper}>
                 <FastImage
                     source={
                         authData?.user?.avatarUrl
@@ -118,9 +245,7 @@ const HomeView = () => {
 
             <TouchableOpacity
                 style={styles.balanceBox}
-                onPress={() => {
-                    navigation.navigate('CheckBalanceView' as never)
-                }}
+                onPress={handleNavigateToBalance}
                 activeOpacity={0.8}
             >
                 <Text style={[DefaultStyles.textMedium14Black, { color: Colors.whiteFF }]}>
@@ -141,26 +266,7 @@ const HomeView = () => {
         <View style={styles.footer}>
             <TouchableOpacity
                 style={styles.waitingBox}
-                onPress={() => {
-                    if (authData?.user?.partner?.profile?.isOnline === true) {
-                        dispatch(
-                            getOrderAction(
-                                { typeService: authData?.user?.partner?.kyc?.choseField },
-                                (data: any) => {
-                                    if (data) {
-                                        setIsModalVisible(true)
-                                    }
-                                },
-                            ),
-                        )
-                    } else {
-                        GlobalModalController.showModal({
-                            title: 'Thất bại',
-                            description: 'Vui lòng bật trạng thái hoạt động',
-                            icon: 'fail',
-                        })
-                    }
-                }}
+                onPress={handleShowWaitingList}
                 activeOpacity={0.8}
             >
                 <View style={styles.waitingContent}>
@@ -182,25 +288,13 @@ const HomeView = () => {
             </TouchableOpacity>
         </View>
     )
+
     return (
         <SafeAreaView style={[DefaultStyles.container]}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-            <MapboxGL.MapView style={styles.map}>
-                {userLocation && (
-                    <>
-                        <MapboxGL.Camera
-                            ref={cameraRef}
-                            zoomLevel={14}
-                            centerCoordinate={userLocation}
-                            animationMode="flyTo"
-                            animationDuration={2000}
-                        />
-                        <MapboxGL.PointAnnotation id="userMarker" coordinate={userLocation}>
-                            <View style={styles.userMarker} />
-                        </MapboxGL.PointAnnotation>
-                    </>
-                )}
-            </MapboxGL.MapView>
+
+            {/* ✅ Sử dụng MemoizedMapView với config tối ưu */}
+            <MemoizedMapView userLocation={userLocation} cameraRef={cameraRef} />
 
             {renderHeader()}
             {renderFooter()}

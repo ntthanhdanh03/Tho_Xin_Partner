@@ -37,7 +37,6 @@ const AppointmentInProgress4View = () => {
 
     const handleConfirm = async () => {
         const postData = {
-            agreedPrice: price,
             afterImages: {
                 images: images,
                 note: description,
