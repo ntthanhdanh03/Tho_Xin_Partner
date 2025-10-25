@@ -17,7 +17,7 @@ import { sendMessageAction } from '../../store/actions/chatAction'
 import { Colors } from '../../styles/Colors'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { scaleModerate } from '../../styles/scaleDimensions'
-import { ic_chevron_left } from '../../assets'
+import { ic_calendar, ic_chevron_left } from '../../assets'
 import CallModal from '../../navigation/CallModal'
 
 const ChatViewVer2 = () => {
@@ -110,10 +110,21 @@ const ChatViewVer2 = () => {
 
                     <TouchableOpacity
                         onPress={() => {
-                            CallModal.show()
+                            CallModal.show({
+                                type: 'outgoing',
+                                role_Call: 'partner',
+
+                                to_userId: dataRoomChat?.clientId,
+                                to_name: dataRoomChat?.fullName,
+                                to_avatar: dataRoomChat?.avatarUrl,
+
+                                from_userId: authData?.user?._id,
+                                form_name: authData?.user?.fullName,
+                                form_avatar: authData?.user?.avatarUrl,
+                            })
                         }}
                     >
-                        <Text style={{ textAlign: 'right' }}> GỌi</Text>
+                        <FastImage style={{ height: 34, width: 34 }} source={ic_calendar} />
                     </TouchableOpacity>
                 </View>
 

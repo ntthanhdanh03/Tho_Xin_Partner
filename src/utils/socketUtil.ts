@@ -19,24 +19,47 @@ export default class SocketUtil {
         })
         this.socket.on('connect', () => DeviceEventEmitter.emit('connect'))
         this.socket.on('disconnect', () => DeviceEventEmitter.emit('disconnect'))
+
         this.socket.on('new_order', () => {
             DeviceEventEmitter.emit('new_order')
         })
+
         this.socket.on('appointment_updated', (data) => {
-            console.log('📨 Nhận appointment-updated với data:', data)
             DeviceEventEmitter.emit('appointment_updated', data)
         })
+
         this.socket.on('chat.newMessage', (payload: { orderId: string; roomId: string }) => {
-            console.log('📨 Nhận chat.newMessage với orderId , roomId:')
             DeviceEventEmitter.emit('chat.newMessage')
         })
 
         this.socket.on('select_applicant', (appointment: string) => {
-            console.log('📨 Nhận select_applicant:', appointment)
             DeviceEventEmitter.emit('order.selectApplicant', appointment)
         })
-        this.socket.on('transaction.top_up.success', (payload: string) => {
-            console.log('📨transaction.top_up.success:', payload)
+        this.socket.on('transaction.top_up.success', (payload: string) => {})
+
+        this.socket.on('call.incoming', (payload) => {
+            console.log('📞 Incoming call:', payload)
+            DeviceEventEmitter.emit('call.incoming', payload)
+        })
+
+        this.socket.on('call.request_cancel', (payload) => {
+            console.log('📞 call.request_cancel', payload)
+            DeviceEventEmitter.emit('call.request_cancel', payload)
+        })
+
+        this.socket.on('call.accepted', (payload) => {
+            console.log('✅ Call accepted:', payload)
+            DeviceEventEmitter.emit('call.accepted', payload)
+        })
+
+        this.socket.on('call.declined', (payload) => {
+            console.log('❌ Call declined:')
+            DeviceEventEmitter.emit('call.declined')
+        })
+
+        this.socket.on('call.ended', (payload) => {
+            console.log('🔚 Call ended:', payload)
+            DeviceEventEmitter.emit('call.ended', payload)
         })
     }
 

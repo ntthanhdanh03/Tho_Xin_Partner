@@ -25,7 +25,7 @@ import {
 import { getOrderAction } from '../store/actions/orderAction'
 import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
 import { getAppointmentAction } from '../store/actions/appointmentAction'
-import { CallModalComponent, default as CallModal } from './CallModal'
+import CallModal, { CallModalComponent } from './CallModal'
 
 const Stack = createNativeStackNavigator()
 
@@ -88,6 +88,35 @@ const RootNavigator = () => {
                 handler: (data: any) => {
                     console.log('appointment_updated event received', data)
                     dispatch(getAppointmentAction({ partnerId: data.partnerId }))
+                },
+            },
+            {
+                name: 'call.incoming',
+                handler: (data: any) => {
+                    console.log('call.incoming', data)
+                    CallModal.show({
+                        type: 'incoming',
+                        role_Receiver: 'partner',
+                        from_userId: data.from_userId,
+                        form_name: data?.form_name,
+                        form_avatar: data?.form_name,
+                        to_userId: data.to_userId,
+                    })
+                },
+            },
+            {
+                name: 'call.request_cancel',
+                handler: (data: any) => {
+                    console.log('call.request_cancel', data)
+                    CallModal.hide()
+                },
+            },
+
+            {
+                name: 'call.declined',
+                handler: (data: any) => {
+                    console.log('call.declined', data)
+                    CallModal.hide()
                 },
             },
         ]
