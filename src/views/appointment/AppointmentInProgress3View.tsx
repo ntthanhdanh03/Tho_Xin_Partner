@@ -234,15 +234,33 @@ const AppointmentInProgress3View = () => {
                 <Spacer height={10} />
 
                 <View style={{ flexDirection: 'row' }}>
-                    <Button
-                        title="Sửa Thất Bại"
-                        containerStyle={{ width: '50%' }}
-                        color={Colors.red30}
-                    />
                     <Spacer width={10} />
+
+                    {/* <SwipeButton
+                    containerStyles={{
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        marginHorizontal: 16,
+                        marginBottom: 10,
+                    }}
+                    railBackgroundColor={Colors.whiteAE}
+                    railFillBackgroundColor={'rgba(0,0,0,0.4)'}
+                    railBorderColor={Colors.gray72}
+                    railFillBorderColor={Colors.whiteAE}
+                    railStyles={{ borderRadius: 8 }}
+                    thumbIconBorderColor="transparent"
+                    thumbIconBackgroundColor={Colors.gray44}
+                    thumbIconStyles={{ borderRadius: 4, width: 40, height: 40 }}
+                    title="Hoàn thành kiểm tra "
+                    titleStyles={{ ...DefaultStyles.textBold16Black }}
+                    titleColor={Colors.black01}
+                    onSwipeSuccess={() => {
+                      
+                    }}
+                /> */}
                     <Button
                         title="Bàn giao"
-                        containerStyle={{ width: '50%' }}
+                        containerStyle={{ width: '100%' }}
                         onPress={handleConfirm}
                     />
                 </View>

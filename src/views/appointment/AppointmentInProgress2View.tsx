@@ -18,6 +18,8 @@ import { uploadKycPhoto } from '../../services/uploadKycPhoto '
 import { updateAppointmentAction } from '../../store/actions/appointmentAction'
 import LoadingWaitingApproveView from '../components/LoadingWaitingApproveView'
 import ImageViewing from 'react-native-image-viewing'
+import Button from '../components/Button'
+import CustomModal from '../home/CustomModal'
 
 const AppointmentInProgress2View = () => {
     const navigation = useNavigation()
@@ -31,6 +33,7 @@ const AppointmentInProgress2View = () => {
     const [images, setImages] = useState<string[]>([])
     const [showCameraOption, setShowCameraOption] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [isModalVisible, setIsModalVisible] = useState(false)
 
     const [isImageViewVisible, setIsImageViewVisible] = useState(false)
     const [imageIndex, setImageIndex] = useState(0)
@@ -142,27 +145,29 @@ const AppointmentInProgress2View = () => {
                 </View>
             </ScrollView>
 
-            <View style={{ borderTopWidth: 1, borderColor: Colors.border01 }}>
+            <View
+                style={{
+                    borderTopWidth: 1,
+                    borderColor: Colors.border01,
+                    flexDirection: 'row',
+                    marginHorizontal: 10,
+                }}
+            >
                 <Spacer height={10} />
-                <SwipeButton
-                    containerStyles={{
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        marginHorizontal: 16,
-                        marginBottom: 10,
+                <Button
+                    title="Sửa Thất Bại"
+                    containerStyle={{ width: '50%' }}
+                    color={Colors.red30}
+                    onPress={() => {
+                        setIsModalVisible(true)
                     }}
-                    railBackgroundColor={Colors.whiteAE}
-                    railFillBackgroundColor={'rgba(0,0,0,0.4)'}
-                    railBorderColor={Colors.gray72}
-                    railFillBorderColor={Colors.whiteAE}
-                    railStyles={{ borderRadius: 8 }}
-                    thumbIconBorderColor="transparent"
-                    thumbIconBackgroundColor={Colors.gray44}
-                    thumbIconStyles={{ borderRadius: 4, width: 40, height: 40 }}
-                    title="Hoàn thành kiểm tra "
-                    titleStyles={{ ...DefaultStyles.textBold16Black }}
-                    titleColor={Colors.black01}
-                    onSwipeSuccess={() => {
+                />
+                <Spacer height={16} />
+                <Button
+                    title="Tiếp tục"
+                    containerStyle={{ width: '50%' }}
+                    color={Colors.primary0}
+                    onPress={() => {
                         GlobalModalController.onActionChange((value: boolean) => {
                             if (value) handleConfirm()
                             else GlobalModalController.hideModal()
@@ -178,6 +183,16 @@ const AppointmentInProgress2View = () => {
                 />
             </View>
 
+            <CustomModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                configHeight={0.75}
+            >
+                <ScrollView style={{ flex: 1 }}>
+                    <Input area title="Vui lòng nhập lí do" />
+                </ScrollView>
+                <Button title="Xác nhận thất bại" />
+            </CustomModal>
             <PhotoOptionsPicker
                 isVisible={showCameraOption}
                 onSelectPhoto={(image) => {

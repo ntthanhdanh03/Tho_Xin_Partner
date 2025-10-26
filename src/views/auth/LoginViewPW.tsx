@@ -18,11 +18,20 @@ const LoginViewPW = ({ route }: any) => {
     const dispatch = useDispatch()
     const [password, setPassword] = useState('')
     const { phoneNumber } = route.params
+
+    // Check if password has 6 digits
+    const isPasswordValid = password.length === 6
+
     const handleForgotPassword = () => {
         navigation.navigate('ForgotPasswordView' as never)
     }
 
     const handleLogin = () => {
+        // Double check validation before calling API
+        if (!isPasswordValid) {
+            return
+        }
+
         const postData = {
             phoneNumber: phoneNumber,
             password: password,
@@ -31,6 +40,7 @@ const LoginViewPW = ({ route }: any) => {
         dispatch(
             loginAction(postData, (data: any, error: any) => {
                 if (data && data.token) {
+                    // Login success - navigation will be handled by Redux/action
                 } else {
                     GlobalModalController.showModal({
                         title: 'Đăng nhập thất bại',
@@ -41,6 +51,7 @@ const LoginViewPW = ({ route }: any) => {
             }),
         )
     }
+
     return (
         <SafeAreaView style={DefaultStyles.container}>
             <Header isBack />
@@ -91,7 +102,12 @@ const LoginViewPW = ({ route }: any) => {
                     đồng ý với quy chế của Thợ Xịn và Thợ Xịn sẽ được xử lí dữ liệu cá nhân của mình
                 </Text>
                 <Spacer height={16} />
-                <Button isColor title={'Tiếp tục'} onPress={handleLogin} />
+                <Button
+                    isColor
+                    title={'Tiếp tục'}
+                    onPress={handleLogin}
+                    disable={!isPasswordValid}
+                />
                 <Spacer height={20} />
             </View>
         </SafeAreaView>

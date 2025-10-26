@@ -52,6 +52,11 @@ export default class SocketUtil {
             DeviceEventEmitter.emit('call.accepted', payload)
         })
 
+        this.socket.on('call.ended', (payload) => {
+            console.log('🔚 Call ended:', payload)
+            DeviceEventEmitter.emit('call.ended', payload)
+        })
+
         this.socket.on('call.declined', (payload) => {
             console.log('❌ Call declined:')
             DeviceEventEmitter.emit('call.declined')
@@ -60,6 +65,19 @@ export default class SocketUtil {
         this.socket.on('call.ended', (payload) => {
             console.log('🔚 Call ended:', payload)
             DeviceEventEmitter.emit('call.ended', payload)
+        })
+
+        this.socket.on('webrtc.offer', (payload) => {
+            console.log('<< offer', payload)
+            DeviceEventEmitter.emit('webrtc.offer', payload)
+        })
+        this.socket.on('webrtc.answer', (payload) => {
+            console.log('<< answer', payload)
+            DeviceEventEmitter.emit('webrtc.answer', payload)
+        })
+        this.socket.on('webrtc.ice-candidate', (payload) => {
+            console.log('<< candidate', payload)
+            DeviceEventEmitter.emit('webrtc.ice-candidate', payload)
         })
     }
 

@@ -13,13 +13,37 @@ import { useDispatch } from 'react-redux'
 import { checkPhoneExistAction } from '../../store/actions/authAction'
 import LoadingView from '../components/LoadingView'
 
+// Regex cho số điện thoại Việt Nam
+const PHONE_REGEX = /^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/
+
 const LoginView = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
     const [phoneNumber, setPhoneNumber] = useState<string | undefined>()
+    const [phoneError, setPhoneError] = useState<string>('')
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
+    // Validate số điện thoại
+    const validatePhoneNumber = (phone: string): boolean => {
+        if (!phone) {
+            setPhoneError('Vui lòng nhập số điện thoại')
+            return false
+        }
+
+        if (!PHONE_REGEX.test(phone)) {
+            setPhoneError('Số điện thoại không hợp lệ')
+            return false
+        }
+
+        setPhoneError('')
+        return true
+    }
+
     const handleCheckPhoneNumber = () => {
+        if (!validatePhoneNumber(phoneNumber || '')) {
+            return
+        }
+
         setIsLoading(true)
         const postData = {
             phoneNumber: phoneNumber,
@@ -59,9 +83,12 @@ const LoginView = () => {
                         value={phoneNumber}
                         onChangeText={(text) => {
                             setPhoneNumber(text)
+                            if (phoneError) {
+                                setPhoneError('')
+                            }
                         }}
-                        outlineColor={Colors.gray69}
-                        activeOutlineColor={Colors.blue11}
+                        outlineColor={phoneError ? Colors.red30 : Colors.gray69}
+                        activeOutlineColor={phoneError ? Colors.red30 : Colors.blue11}
                         textColor={Colors.black01}
                         style={{ fontSize: scaleModerate(14) }}
                         theme={{
@@ -72,7 +99,9 @@ const LoginView = () => {
                         }}
                         left={<TextInput.Icon icon={ic_balence} size={30} />}
                         right={<TextInput.Icon icon={ic_calendar} />}
+                        error={!!phoneError}
                     />
+                    {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
                 </View>
                 <Spacer height={30} />
             </View>
@@ -92,4 +121,11 @@ const LoginView = () => {
 
 export default LoginView
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    errorText: {
+        color: 'red',
+        fontSize: scaleModerate(12),
+        marginTop: 4,
+        marginLeft: 12,
+    },
+})

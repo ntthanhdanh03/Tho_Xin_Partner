@@ -26,8 +26,12 @@ import { getOrderAction } from '../store/actions/orderAction'
 import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
 import { getAppointmentAction } from '../store/actions/appointmentAction'
 import CallModal, { CallModalComponent } from './CallModal'
+import WebRTCPartner from '../utils/webrtcClient'
 
 const Stack = createNativeStackNavigator()
+
+// 🆕 Lưu trữ tạm thông tin cuộc gọi
+let pendingCallData: any = null
 
 const RootNavigator = () => {
     const dispatch = useDispatch()
@@ -90,24 +94,76 @@ const RootNavigator = () => {
                     dispatch(getAppointmentAction({ partnerId: data.partnerId }))
                 },
             },
+
+            // 🆕 OFFER - CHỈ LƯU DATA, CHƯA XỬ LÝ
             {
-                name: 'call.incoming',
+                name: 'webrtc.offer',
                 handler: (data: any) => {
-                    console.log('call.incoming', data)
+                    console.log('📥 Nhận offer từ:', data.from_userId)
+
+                    // Lưu vào pending để dùng khi Accept
+                    pendingCallData = {
+                        from_userId: data.from_userId,
+                        to_userId: data.to_userId,
+                        sdp: data.sdp,
+                        form_name: data?.form_name,
+                        form_avatar: data?.form_avatar,
+                    }
+
+                    // Hiển thị UI incoming call
                     CallModal.show({
                         type: 'incoming',
                         role_Receiver: 'partner',
                         from_userId: data.from_userId,
                         form_name: data?.form_name,
-                        form_avatar: data?.form_name,
+                        form_avatar: data?.form_avatar,
                         to_userId: data.to_userId,
+                        sdp: data.sdp,
                     })
                 },
             },
+
+            // 🆕 ICE CANDIDATE - QUEUE TRƯỚC KHI CÓ PC
+            {
+                name: 'webrtc.ice-candidate',
+                handler: (data: any) => {
+                    console.log('❄️ Nhận candidate:', data.to_role)
+
+                    if (data.to_role === 'partner') {
+                        // Nếu chưa có PeerConnection, queue vào static map
+                        if (!WebRTCPartner.pc) {
+                            const fromUserId = data.from_userId || pendingCallData?.from_userId
+                            if (fromUserId) {
+                                // Gọi static method qua constructor
+                                ;(WebRTCPartner.constructor as any).queueCandidateBeforeConnection(
+                                    fromUserId,
+                                    data.candidate,
+                                )
+                            } else {
+                                console.warn('⚠️ Cannot queue candidate: no from_userId')
+                            }
+                        } else {
+                            // Đã có PC, xử lý bình thường
+                            WebRTCPartner.handleCandidate(data)
+                        }
+                    }
+                },
+            },
+
             {
                 name: 'call.request_cancel',
                 handler: (data: any) => {
-                    console.log('call.request_cancel', data)
+                    console.log('📞 call.request_cancel', data)
+                    pendingCallData = null
+                    CallModal.hide()
+                },
+            },
+
+            {
+                name: 'call.ended',
+                handler: (data: any) => {
+                    console.log('📴 call.ended', data)
+                    pendingCallData = null
                     CallModal.hide()
                 },
             },
@@ -115,15 +171,27 @@ const RootNavigator = () => {
             {
                 name: 'call.declined',
                 handler: (data: any) => {
-                    console.log('call.declined', data)
+                    console.log('❌ call.declined', data)
+                    pendingCallData = null
                     CallModal.hide()
+                },
+            },
+
+            {
+                name: 'webrtc.answer',
+                handler: (data: any) => {
+                    console.log('📥 Nhận answer')
+                    WebRTCPartner.handleAnswer(data.sdp)
                 },
             },
         ]
 
         const subscriptions = events.map((e) => DeviceEventEmitter.addListener(e.name, e.handler))
 
-        return () => subscriptions.forEach((sub) => sub.remove())
+        return () => {
+            subscriptions.forEach((sub) => sub.remove())
+            pendingCallData = null
+        }
     }, [authData])
 
     useEffect(() => {
@@ -168,7 +236,6 @@ const RootNavigator = () => {
 
         const onBackground = () => {
             console.log('🌙 APP_BACKGROUND')
-            console.log()
         }
 
         const subForeground = DeviceEventEmitter.addListener('APP_FOREGROUND', onForeground)

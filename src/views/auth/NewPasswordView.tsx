@@ -20,7 +20,15 @@ const NewPasswordView = ({ route }: any) => {
     const [password, setPassword] = useState('')
     const [hidePassword, setHidePassword] = useState(true)
 
+    // Check if password has 6 digits
+    const isPasswordValid = password.length === 6
+
     const handlePartnerRegister = () => {
+        // Validate password before calling API
+        if (!isPasswordValid) {
+            return
+        }
+
         const postData = {
             phoneNumber: phoneNumber,
             password: password,
@@ -57,14 +65,15 @@ const NewPasswordView = ({ route }: any) => {
                     {'Tạo mật khẩu'}
                 </Text>
                 <Spacer height={8} />
-
+                <Text style={[DefaultStyles.textRegular14Black, { color: Colors.gray44 }]}>
+                    {'Mật khẩu phải có 6 chữ số'}
+                </Text>
                 <Spacer height={16} />
                 <View style={{ paddingRight: scaleModerate(40) }}>
                     <OtpInput
                         autoFocus
                         secureTextEntry={hidePassword}
                         numberOfDigits={6}
-                        // ref={otpRef}
                         onTextChange={(text) => setPassword(text)}
                         theme={{
                             focusStickStyle: {
@@ -72,6 +81,10 @@ const NewPasswordView = ({ route }: any) => {
                             },
                             focusedPinCodeContainerStyle: {
                                 borderColor: Colors.primary,
+                                borderWidth: 1,
+                            },
+                            filledPinCodeContainerStyle: {
+                                borderColor: Colors.green34,
                                 borderWidth: 1,
                             },
                             pinCodeTextStyle: {
@@ -95,7 +108,12 @@ const NewPasswordView = ({ route }: any) => {
             </View>
             <View style={{ marginHorizontal: scaleModerate(16) }}>
                 <Spacer height={16} />
-                <Button isColor title={'Xác nhận'} onPress={handlePartnerRegister} />
+                <Button
+                    isColor
+                    title={'Xác nhận'}
+                    onPress={handlePartnerRegister}
+                    disable={!isPasswordValid}
+                />
                 <Spacer height={20} />
             </View>
         </SafeAreaView>
