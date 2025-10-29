@@ -11,8 +11,10 @@ import OutsideStack from './OutsideStack'
 import InsideStack from './InsideStack'
 import WorkingInProgressStack from './WorkingInProgressStack'
 import NotificationModal from './NotificationModal'
+import CallModal, { CallModalComponent } from './CallModal'
 import { navigationRef } from './NavigationService'
 import SocketUtil from '../utils/socketUtil'
+import WebRTCPartner from '../utils/webrtcClient'
 import { getFCMToken, initNotificationConfig } from '../utils/notificationUtils'
 import '../utils/appStateUtil'
 
@@ -25,13 +27,14 @@ import {
 import { getOrderAction } from '../store/actions/orderAction'
 import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
 import { getAppointmentAction } from '../store/actions/appointmentAction'
-import CallModal, { CallModalComponent } from './CallModal'
-import WebRTCPartner from '../utils/webrtcClient'
 
 const Stack = createNativeStackNavigator()
 
-// 🆕 Lưu trữ tạm thông tin cuộc gọi
+// ==================== GLOBALS ====================
+
 let pendingCallData: any = null
+
+// ==================== COMPONENT ====================
 
 const RootNavigator = () => {
     const dispatch = useDispatch()
@@ -43,6 +46,8 @@ const RootNavigator = () => {
     const [notif, setNotif] = useState<{ title?: string; message?: string; visible: boolean }>({
         visible: false,
     })
+
+    // ==================== BOOTSTRAP ====================
 
     useEffect(() => {
         const bootstrap = async () => {
@@ -63,12 +68,20 @@ const RootNavigator = () => {
         bootstrap()
     }, [])
 
+    // ==================== SOCKET EVENTS ====================
+
     useEffect(() => {
         if (!authData?.user?._id) return
 
-        const events = [
-            { name: 'connect', handler: () => dispatch(connectSocketSuccessAction()) },
-            { name: 'disconnect', handler: () => dispatch(disconnectSocketSuccessAction()) },
+        const socketEvents = [
+            {
+                name: 'connect',
+                handler: () => dispatch(connectSocketSuccessAction()),
+            },
+            {
+                name: 'disconnect',
+                handler: () => dispatch(disconnectSocketSuccessAction()),
+            },
             {
                 name: 'new_order',
                 handler: () => {
@@ -76,8 +89,14 @@ const RootNavigator = () => {
                     dispatch(getOrderAction({ typeService: authData.user.partner.kyc.choseField }))
                 },
             },
-            { name: 'cancel_order', handler: (order: any) => console.log('Cancel order:', order) },
-            { name: 'update_order', handler: (order: any) => console.log('Update order:', order) },
+            {
+                name: 'cancel_order',
+                handler: (order: any) => console.log('Cancel order:', order),
+            },
+            {
+                name: 'update_order',
+                handler: (order: any) => console.log('Update order:', order),
+            },
             {
                 name: 'order.selectApplicant',
                 handler: () => dispatch(getAppointmentAction({ partnerId: authData.user._id })),
@@ -90,18 +109,18 @@ const RootNavigator = () => {
             {
                 name: 'appointment_updated',
                 handler: (data: any) => {
-                    console.log('appointment_updated event received', data)
+                    console.log('📅 appointment_updated event received', data)
                     dispatch(getAppointmentAction({ partnerId: data.partnerId }))
                 },
             },
+        ]
 
-            // 🆕 OFFER - CHỈ LƯU DATA, CHƯA XỬ LÝ
+        const callEvents = [
             {
                 name: 'webrtc.offer',
                 handler: (data: any) => {
                     console.log('📥 Nhận offer từ:', data.from_userId)
 
-                    // Lưu vào pending để dùng khi Accept
                     pendingCallData = {
                         from_userId: data.from_userId,
                         to_userId: data.to_userId,
@@ -110,7 +129,6 @@ const RootNavigator = () => {
                         form_avatar: data?.form_avatar,
                     }
 
-                    // Hiển thị UI incoming call
                     CallModal.show({
                         type: 'incoming',
                         role_Receiver: 'partner',
@@ -122,19 +140,22 @@ const RootNavigator = () => {
                     })
                 },
             },
-
-            // 🆕 ICE CANDIDATE - QUEUE TRƯỚC KHI CÓ PC
+            {
+                name: 'webrtc.answer',
+                handler: (data: any) => {
+                    console.log('📥 Nhận answer')
+                    WebRTCPartner.handleAnswer(data.sdp)
+                },
+            },
             {
                 name: 'webrtc.ice-candidate',
                 handler: (data: any) => {
-                    console.log('❄️ Nhận candidate:', data.to_role)
+                    console.log('❄️ Nhận ICE candidate:', data.to_role)
 
                     if (data.to_role === 'partner') {
-                        // Nếu chưa có PeerConnection, queue vào static map
                         if (!WebRTCPartner.pc) {
                             const fromUserId = data.from_userId || pendingCallData?.from_userId
                             if (fromUserId) {
-                                // Gọi static method qua constructor
                                 ;(WebRTCPartner.constructor as any).queueCandidateBeforeConnection(
                                     fromUserId,
                                     data.candidate,
@@ -143,13 +164,11 @@ const RootNavigator = () => {
                                 console.warn('⚠️ Cannot queue candidate: no from_userId')
                             }
                         } else {
-                            // Đã có PC, xử lý bình thường
                             WebRTCPartner.handleCandidate(data)
                         }
                     }
                 },
             },
-
             {
                 name: 'call.request_cancel',
                 handler: (data: any) => {
@@ -158,7 +177,6 @@ const RootNavigator = () => {
                     CallModal.hide()
                 },
             },
-
             {
                 name: 'call.ended',
                 handler: (data: any) => {
@@ -167,7 +185,6 @@ const RootNavigator = () => {
                     CallModal.hide()
                 },
             },
-
             {
                 name: 'call.declined',
                 handler: (data: any) => {
@@ -176,23 +193,20 @@ const RootNavigator = () => {
                     CallModal.hide()
                 },
             },
-
-            {
-                name: 'webrtc.answer',
-                handler: (data: any) => {
-                    console.log('📥 Nhận answer')
-                    WebRTCPartner.handleAnswer(data.sdp)
-                },
-            },
         ]
 
-        const subscriptions = events.map((e) => DeviceEventEmitter.addListener(e.name, e.handler))
+        const allEvents = [...socketEvents, ...callEvents]
+        const subscriptions = allEvents.map((e) =>
+            DeviceEventEmitter.addListener(e.name, e.handler),
+        )
 
         return () => {
             subscriptions.forEach((sub) => sub.remove())
             pendingCallData = null
         }
     }, [authData])
+
+    // ==================== AUTH & NOTIFICATIONS ====================
 
     useEffect(() => {
         if (!authData) return
@@ -202,7 +216,7 @@ const RootNavigator = () => {
             handleCreateInstallation(authData, installationData)
 
             getMessaging().onMessage((remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-                console.log('Foreground notification:', remoteMessage)
+                console.log('🔔 Foreground notification:', remoteMessage)
                 setNotif({
                     visible: true,
                     title: remoteMessage.notification?.title,
@@ -223,11 +237,12 @@ const RootNavigator = () => {
         setPrevUserState(authData)
     }, [authData])
 
+    // ==================== APP STATE HANDLERS ====================
+
     useEffect(() => {
         const onForeground = () => {
             if (authData) {
-                console.log('🚀 APP_FOREGROUND')
-                console.log('authData?.user?._id APP_FOREGROUND', authData?.user?._id)
+                console.log('🚀 APP_FOREGROUND | User:', authData?.user?._id)
                 dispatch(getAppointmentAction({ partnerId: authData.user._id }))
                 dispatch(getChatRoomByApplicantAction({ _applicantId: authData.user._id }))
                 dispatch(getOrderAction({ typeService: authData.user.partner.kyc.choseField }))
@@ -247,6 +262,8 @@ const RootNavigator = () => {
         }
     }, [authData])
 
+    // ==================== HELPERS ====================
+
     const handleCreateInstallation = async (userData: any, installationData: any) => {
         if (installationData?.token && userData.user.deviceToken !== installationData.token) {
             const fcmToken = await getFCMToken()
@@ -262,6 +279,8 @@ const RootNavigator = () => {
             )
         }
     }
+
+    // ==================== RENDER ====================
 
     if (!isAuthChecked) return null
 

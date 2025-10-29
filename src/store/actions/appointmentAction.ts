@@ -40,6 +40,12 @@ export const updateCompleteAppointmentAction = (data: any, callback?: any) => ({
 })
 
 export const updateCompleteAppointmentSuccessAction = (data: any) => ({
-    type: types.UPDATE_COMPLETE_APPOINTMENT + types.SUCCESS,
+    type: types.UPDATE_CANCEL_APPOINTMENT + types.SUCCESS,
     payload: data,
+})
+
+export const updateCancelAppointmentAction = (data: any, callback?: any) => ({
+    type: types.UPDATE_CANCEL_APPOINTMENT,
+    payload: data,
+    callback,
 })

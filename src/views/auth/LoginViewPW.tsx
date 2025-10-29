@@ -28,9 +28,9 @@ const LoginViewPW = ({ route }: any) => {
 
     const handleLogin = () => {
         // Double check validation before calling API
-        if (!isPasswordValid) {
-            return
-        }
+        // if (!isPasswordValid) {
+        //     return
+        // }
 
         const postData = {
             phoneNumber: phoneNumber,
@@ -106,7 +106,7 @@ const LoginViewPW = ({ route }: any) => {
                     isColor
                     title={'Tiếp tục'}
                     onPress={handleLogin}
-                    disable={!isPasswordValid}
+                    // disable={!isPasswordValid}
                 />
                 <Spacer height={20} />
             </View>

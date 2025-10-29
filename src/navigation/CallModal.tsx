@@ -1,22 +1,22 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import Sound from 'react-native-sound'
 import { Colors } from '../styles/Colors'
 import SocketUtil from '../utils/socketUtil'
 import WebRTCPartner from '../utils/webrtcClient'
-import Sound from 'react-native-sound'
 
 const { height } = Dimensions.get('window')
+
+// ==================== TYPES ====================
 
 export interface CallModalProps {
     type: 'outgoing' | 'incoming'
     role_Call?: 'client' | 'partner'
     role_Receiver?: 'client' | 'partner'
     sdp?: string
-
     from_userId?: string
     form_name?: string
     form_avatar?: string
-
     to_userId?: string
     to_name?: string
     to_avatar?: string
@@ -27,36 +27,46 @@ export interface CallModalRef {
     hide: () => void
 }
 
+// ==================== GLOBALS ====================
+
 let modalRef: CallModalRef | null = null
 let ringtone: Sound | null = null
 
+// ==================== COMPONENT ====================
+
 const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
+    // State
     const [visible, setVisible] = useState(false)
     const [data, setData] = useState<CallModalProps | null>(null)
-    const translateY = useRef(new Animated.Value(height)).current
     const [callPhase, setCallPhase] = useState<'ringing' | 'inCall'>('ringing')
     const [isSpeakerOn, setIsSpeakerOn] = useState(false)
     const [isMuted, setIsMuted] = useState(false)
     const [callDuration, setCallDuration] = useState(0)
+
+    // Refs
+    const translateY = useRef(new Animated.Value(height)).current
     const callTimerRef = useRef<NodeJS.Timeout | null>(null)
     const pulseAnim = useRef(new Animated.Value(1)).current
+
+    // ==================== IMPERATIVE HANDLE ====================
 
     useImperativeHandle(ref, () => ({
         show: (props: CallModalProps) => {
             setData(props)
             setVisible(true)
+
             Animated.timing(translateY, {
                 toValue: 0,
                 duration: 300,
                 useNativeDriver: true,
             }).start()
-            console.log('reinggg')
+
             ringtone = new Sound('ringring', Sound.MAIN_BUNDLE, (error) => {
                 if (error) {
                     console.log('❌ Lỗi tải âm thanh:', error)
                     return
                 }
-                ringtone?.setNumberOfLoops(-1) // lặp vô hạn
+                ringtone?.setNumberOfLoops(-1)
                 ringtone?.play()
             })
         },
@@ -72,11 +82,13 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
                 setIsSpeakerOn(false)
                 setIsMuted(false)
                 setCallDuration(0)
+
                 if (callTimerRef.current) {
                     clearInterval(callTimerRef.current)
                     callTimerRef.current = null
                 }
             })
+
             ringtone?.stop(() => {
                 ringtone?.release()
                 ringtone = null
@@ -84,7 +96,9 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
         },
     }))
 
-    // Pulse animation for ringing state
+    // ==================== EFFECTS ====================
+
+    // Pulse animation effect
     useEffect(() => {
         if (callPhase === 'ringing') {
             Animated.loop(
@@ -101,11 +115,10 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
                     }),
                 ]),
             ).start()
-        } else {
         }
-    }, [callPhase])
+    }, [callPhase, pulseAnim])
 
-    // Call timer
+    // Call timer effect
     useEffect(() => {
         if (callPhase === 'inCall') {
             callTimerRef.current = setInterval(() => {
@@ -121,10 +134,15 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
         }
     }, [callPhase])
 
+    // Socket listeners effect
     useEffect(() => {
         SocketUtil.on('call.accepted', (payload) => {
             console.log('✅ Call accepted:', payload)
             setCallPhase('inCall')
+            ringtone?.stop(() => {
+                ringtone?.release()
+                ringtone = null
+            })
         })
 
         SocketUtil.on('call.ended', () => {
@@ -140,6 +158,7 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
         }
     }, [])
 
+    // Outgoing call effect
     useEffect(() => {
         if (!data?.to_userId || !data?.from_userId) return
 
@@ -156,26 +175,14 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
         }
     }, [data])
 
-    if (!visible || !data) return null
-
-    const { type, to_name, form_name } = data
-
-    const formatDuration = (seconds: number) => {
-        const mins = Math.floor(seconds / 60)
-        const secs = seconds % 60
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-    }
-
-    const callRequestCancel = () => {
-        SocketUtil.emit('call.request_cancel', {
-            to: data.to_userId,
-            role: 'partner',
-        })
-        WebRTCPartner.endCall()
-        modalRef?.hide()
-    }
+    // ==================== HANDLERS ====================
 
     const handleAcceptCall = async () => {
+        ringtone?.stop(() => {
+            ringtone?.release()
+            ringtone = null
+        })
+
         if (!data?.from_userId || !data?.to_userId || !data?.sdp) {
             console.warn('⚠️ Thiếu thông tin cuộc gọi:', data)
             return
@@ -184,8 +191,6 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
         const fromUserId = data.from_userId
         const toUserId = data.to_userId
         const sdp = data.sdp
-
-        console.log('✅ Accepting call from:', fromUserId)
 
         SocketUtil.emit('call.accept', {
             from_userId: toUserId,
@@ -204,70 +209,100 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
     }
 
     const handleDeclineCall = () => {
-        if (data.role_Receiver === 'client') {
-            SocketUtil.emit('call.decline', {
-                to: data.from_userId,
-                role: 'client',
-            })
-        } else {
-            SocketUtil.emit('call.decline', {
-                to: data.from_userId,
-                role: 'partner',
-            })
-        }
+        ringtone?.stop(() => {
+            ringtone?.release()
+            ringtone = null
+        })
+
+        SocketUtil.emit('call.decline', {
+            to: data?.from_userId,
+            role: 'client',
+        })
+
+        modalRef?.hide()
+    }
+
+    const callRequestCancel = () => {
+        SocketUtil.emit('call.request_cancel', {
+            to: data?.to_userId,
+            role: 'partner',
+        })
+
+        WebRTCPartner.endCall()
+        modalRef?.hide()
+    }
+
+    const handleEndCall = () => {
+        ringtone?.stop(() => {
+            ringtone?.release()
+            ringtone = null
+        })
+
+        WebRTCPartner.endCall()
+
+        SocketUtil.emit('call.end', {
+            to_userId: data?.to_userId,
+            from_userId: data?.from_userId,
+        })
+
+        setCallPhase('ringing')
         modalRef?.hide()
     }
 
     const toggleSpeaker = () => {
         setIsSpeakerOn(!isSpeakerOn)
-        // TODO: Implement actual speaker toggle using InCallManager
-        // InCallManager.setSpeakerphoneOn(!isSpeakerOn)
     }
 
     const toggleMute = () => {
         const newMutedState = !isMuted
         setIsMuted(newMutedState)
 
-        // Mute/unmute local audio track
         if (WebRTCPartner.localStream) {
             WebRTCPartner.localStream.getAudioTracks().forEach((track: any) => {
                 track.enabled = !newMutedState
             })
-            console.log(newMutedState ? '🔇 Muted' : '🔊 Unmuted')
         }
     }
 
-    const handleEndCall = () => {
-        WebRTCPartner.endCall()
-        SocketUtil.emit('call.end', {
-            to_userId: data?.to_userId,
-            from_userId: data?.from_userId,
-        })
-        setCallPhase('ringing')
-        modalRef?.hide()
+    // ==================== HELPERS ====================
+
+    const formatDuration = (seconds: number) => {
+        const mins = Math.floor(seconds / 60)
+        const secs = seconds % 60
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     }
+
+    const getDisplayName = () => {
+        return data?.type === 'incoming' ? data?.form_name : data?.to_name || 'Khách hàng'
+    }
+
+    const getAvatarLetter = () => {
+        const name = data?.type === 'incoming' ? data?.form_name : data?.to_name
+        return name?.charAt(0).toUpperCase() || 'K'
+    }
+
+    // ==================== RENDER ====================
+
+    if (!visible || !data) return null
+
+    const { type } = data
 
     return (
         <Animated.View style={[styles.overlay, { transform: [{ translateY }] }]}>
             <View style={styles.container}>
                 {callPhase === 'ringing' ? (
+                    // Ringing Phase
                     <>
                         <Animated.View
                             style={[styles.avatarContainer, { transform: [{ scale: pulseAnim }] }]}
                         >
                             <View style={styles.avatarPlaceholder}>
-                                <Text style={styles.avatarText}>
-                                    {type === 'incoming'
-                                        ? form_name?.charAt(0).toUpperCase()
-                                        : to_name?.charAt(0).toUpperCase() || 'K'}
-                                </Text>
+                                <Text style={styles.avatarText}>{getAvatarLetter()}</Text>
                             </View>
                         </Animated.View>
 
                         <View style={styles.callerInfo}>
-                            <Text style={styles.name}>
-                                {type === 'incoming' ? form_name : to_name || 'Khách hàng'}
-                            </Text>
+                            <Text style={styles.name}>{getDisplayName()}</Text>
                             <Text style={styles.sub}>
                                 {type === 'incoming' ? 'Cuộc gọi đến...' : 'Đang gọi...'}
                             </Text>
@@ -298,75 +333,68 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
                         </View>
                     </>
                 ) : (
-                    <>
-                        <View style={styles.inCallContainer}>
-                            <View style={styles.avatarContainerSmall}>
-                                <Text style={styles.avatarTextSmall}>
-                                    {type === 'incoming'
-                                        ? form_name?.charAt(0).toUpperCase()
-                                        : to_name?.charAt(0).toUpperCase() || 'K'}
+                    // In-Call Phase
+                    <View style={styles.inCallContainer}>
+                        <View style={styles.avatarContainerSmall}>
+                            <Text style={styles.avatarTextSmall}>{getAvatarLetter()}</Text>
+                        </View>
+
+                        <Text style={styles.nameInCall}>{getDisplayName()}</Text>
+                        <Text style={styles.durationText}>{formatDuration(callDuration)}</Text>
+
+                        <View style={styles.controlButtons}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.controlButton,
+                                    isMuted && styles.controlButtonActive,
+                                ]}
+                                onPress={toggleMute}
+                            >
+                                <Text style={styles.controlIcon}>{isMuted ? '🔇' : '🎤'}</Text>
+                                <Text
+                                    style={[
+                                        styles.controlLabel,
+                                        isMuted && styles.controlLabelActive,
+                                    ]}
+                                >
+                                    {isMuted ? 'Đã tắt' : 'Mic'}
                                 </Text>
-                            </View>
-
-                            <Text style={styles.nameInCall}>
-                                {type === 'incoming' ? form_name : to_name || 'Khách hàng'}
-                            </Text>
-                            <Text style={styles.durationText}>{formatDuration(callDuration)}</Text>
-
-                            <View style={styles.controlButtons}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.controlButton,
-                                        isMuted && styles.controlButtonActive,
-                                    ]}
-                                    onPress={toggleMute}
-                                >
-                                    <Text style={styles.controlIcon}>{isMuted ? '🔇' : '🎤'}</Text>
-                                    <Text
-                                        style={[
-                                            styles.controlLabel,
-                                            isMuted && styles.controlLabelActive,
-                                        ]}
-                                    >
-                                        {isMuted ? 'Đã tắt' : 'Mic'}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={[
-                                        styles.controlButton,
-                                        isSpeakerOn && styles.controlButtonActive,
-                                    ]}
-                                    onPress={toggleSpeaker}
-                                >
-                                    <Text style={styles.controlIcon}>
-                                        {isSpeakerOn ? '🔊' : '🔉'}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.controlLabel,
-                                            isSpeakerOn && styles.controlLabelActive,
-                                        ]}
-                                    >
-                                        {isSpeakerOn ? 'Loa ngoài' : 'Loa'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                            </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.button, styles.endCallButton]}
-                                onPress={handleEndCall}
+                                style={[
+                                    styles.controlButton,
+                                    isSpeakerOn && styles.controlButtonActive,
+                                ]}
+                                onPress={toggleSpeaker}
                             >
-                                <Text style={styles.btnIcon}>✕</Text>
-                                <Text style={styles.btnLabel}>Kết thúc</Text>
+                                <Text style={styles.controlIcon}>{isSpeakerOn ? '🔊' : '🔉'}</Text>
+                                <Text
+                                    style={[
+                                        styles.controlLabel,
+                                        isSpeakerOn && styles.controlLabelActive,
+                                    ]}
+                                >
+                                    {isSpeakerOn ? 'Loa ngoài' : 'Loa'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
-                    </>
+
+                        <TouchableOpacity
+                            style={[styles.button, styles.endCallButton]}
+                            onPress={handleEndCall}
+                        >
+                            <Text style={styles.btnIcon}>✕</Text>
+                            <Text style={styles.btnLabel}>Kết thúc</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
         </Animated.View>
     )
 })
+
+// ==================== EXPORT ====================
 
 const CallModal = {
     setRef: (ref: any) => (modalRef = ref),
@@ -376,6 +404,8 @@ const CallModal = {
 
 export { CallModalComponent }
 export default CallModal
+
+// ==================== STYLES ====================
 
 const styles = StyleSheet.create({
     overlay: {
@@ -398,6 +428,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 60,
     },
+
+    // Avatar Styles
     avatarContainer: {
         marginBottom: 40,
     },
@@ -432,13 +464,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#4CD964',
     },
+
+    // Caller Info Styles
     callerInfo: {
         alignItems: 'center',
         marginBottom: 80,
-    },
-    inCallContainer: {
-        alignItems: 'center',
-        width: '100%',
     },
     name: {
         fontSize: 32,
@@ -464,6 +494,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: 50,
     },
+
+    // In-Call Container
+    inCallContainer: {
+        alignItems: 'center',
+        width: '100%',
+    },
+
+    // Button Styles
     buttons: {
         flexDirection: 'row',
         gap: 50,
@@ -502,6 +540,8 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontWeight: '600',
     },
+
+    // Control Buttons
     controlButtons: {
         flexDirection: 'row',
         justifyContent: 'center',

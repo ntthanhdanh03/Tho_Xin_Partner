@@ -112,26 +112,19 @@ class WebRTCPartner {
 
     // Caller tạo offer
     async startCall(remoteUserId: string, from_userId: string) {
-        console.log('📞 Start call to', remoteUserId)
         await this.createPeerConnection(remoteUserId, true)
-
         const offer = await this.pc!.createOffer()
         await this.pc!.setLocalDescription(offer)
 
         SocketUtil.emit('webrtc.offer', {
             from_userId,
             to_userId: remoteUserId,
+            to_role: 'client',
             sdp: offer,
         })
-
-        console.log('📡 Offer sent to', remoteUserId)
     }
 
-    // Receiver handle offer và tạo answer
     async handleOffer(from_userId: string, sdp: any, to_userId: string) {
-        console.log('📥 Nhận offer từ', from_userId)
-
-        // 🆕 Load candidates đã queue trước đó vào instance queue
         const preCandidates = WebRTCPartner.preConnectionCandidateMap.get(from_userId) || []
         if (preCandidates.length > 0) {
             console.log('🔄 Loading', preCandidates.length, 'pre-queued candidates')
@@ -146,7 +139,6 @@ class WebRTCPartner {
         this.remoteDescriptionSet = true
         console.log('✅ Remote description set successfully')
 
-        // Flush candidate queue nếu có
         await this.flushCandidateQueue()
 
         const answer = await this.pc!.createAnswer()
@@ -155,6 +147,7 @@ class WebRTCPartner {
         SocketUtil.emit('webrtc.answer', {
             from_userId: to_userId,
             to_userId: from_userId,
+            to_role: 'client',
             sdp: answer,
         })
 

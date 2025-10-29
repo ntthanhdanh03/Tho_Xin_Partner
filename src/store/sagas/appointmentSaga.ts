@@ -91,11 +91,32 @@ function* updateCompleteAppointmentSaga({
     }
 }
 
+function* updateCancelAppointmentSaga({
+    payload,
+    callback,
+}: ReturnType<typeof actions.updateCancelAppointmentAction>) {
+    try {
+        const response: IResponse = yield call(() =>
+            api.post(`/appointments/${payload?.id}/cancel`, { reason: payload.reason }),
+        )
+        if (response?.status === 201 && response?.data) {
+            console.log('***updateCancelAppointmentSaga', response.data)
+            callback?.(response.data, null)
+        } else {
+            callback?.(null, 'failure')
+        }
+    } catch (e: any) {
+        console.log('updateCancelAppointmentSaga', e, e?.response)
+        callback?.(null, 'failure')
+    }
+}
+
 export default function* appointmentSaga() {
     yield all([
         takeLatest(types.GET_APPOINTMENT, getAppointmentSaga),
         takeLatest(types.GET_APPOINTMENT_BY_ID, getAppointmentByIdSaga),
         takeLatest(types.UPDATE_APPOINTMENT, updateAppointmentSaga),
         takeLatest(types.UPDATE_COMPLETE_APPOINTMENT, updateCompleteAppointmentSaga),
+        takeLatest(types.UPDATE_CANCEL_APPOINTMENT, updateCancelAppointmentSaga),
     ])
 }

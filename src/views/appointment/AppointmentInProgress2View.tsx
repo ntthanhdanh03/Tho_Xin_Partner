@@ -15,7 +15,11 @@ import SwipeButton from 'rn-swipe-button'
 import Header from '../components/Header'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { uploadKycPhoto } from '../../services/uploadKycPhoto '
-import { updateAppointmentAction } from '../../store/actions/appointmentAction'
+import {
+    getAppointmentAction,
+    updateAppointmentAction,
+    updateCancelAppointmentAction,
+} from '../../store/actions/appointmentAction'
 import LoadingWaitingApproveView from '../components/LoadingWaitingApproveView'
 import ImageViewing from 'react-native-image-viewing'
 import Button from '../components/Button'
@@ -25,9 +29,11 @@ const AppointmentInProgress2View = () => {
     const navigation = useNavigation()
     const dispatch = useDispatch()
     const { data: appointmentData } = useSelector((store: any) => store.appointment)
+    const { data: authData } = useSelector((store: any) => store.auth)
 
     const APPOINTMENT_UPDATE_IN_PROGRESS = appointmentData?.appointmentInProgress?.[0]
 
+    const [reason, setReason] = useState<string>('')
     const [description, setDescription] = useState<string>('')
     const [price, setPrice] = useState<number>(0)
     const [images, setImages] = useState<string[]>([])
@@ -64,6 +70,20 @@ const AppointmentInProgress2View = () => {
         dispatch(
             updateAppointmentAction(dataUpdate, (data: any) => {
                 if (data) {
+                }
+            }),
+        )
+    }
+
+    const handleCancelAppointment = async () => {
+        const dataUpdate = {
+            id: APPOINTMENT_UPDATE_IN_PROGRESS._id,
+            reason: reason,
+        }
+        dispatch(
+            updateCancelAppointmentAction(dataUpdate, (data: any) => {
+                if (data) {
+                    dispatch(getAppointmentAction({ partnerId: authData.user._id }))
                 }
             }),
         )
@@ -189,9 +209,21 @@ const AppointmentInProgress2View = () => {
                 configHeight={0.75}
             >
                 <ScrollView style={{ flex: 1 }}>
-                    <Input area title="Vui lòng nhập lí do" />
+                    <Input
+                        area
+                        title="Vui lòng nhập lí do"
+                        onChangeText={(text: any) => {
+                            setReason(text)
+                        }}
+                        value={reason}
+                    />
                 </ScrollView>
-                <Button title="Xác nhận thất bại" />
+                <Button
+                    title="Xác nhận thất bại"
+                    onPress={() => {
+                        handleCancelAppointment()
+                    }}
+                />
             </CustomModal>
             <PhotoOptionsPicker
                 isVisible={showCameraOption}
