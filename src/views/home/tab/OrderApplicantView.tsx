@@ -86,16 +86,6 @@ const OrderApplicantView = ({ route }: any) => {
                                 <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>
                                     {item.service}
                                 </Text>
-                                {/* <View style={styles.statusBadge}>
-                                    <Text
-                                        style={[
-                                            DefaultStyles.textBold12Black,
-                                            { color: Colors.yellow00 },
-                                        ]}
-                                    >
-                                        {item.status.toUpperCase()}
-                                    </Text>
-                                </View> */}
                             </View>
 
                             <Text
@@ -149,7 +139,7 @@ const OrderApplicantView = ({ route }: any) => {
                             </View>
                         </TouchableOpacity>
                     )}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={{ marginTop: 10 }}
                     showsVerticalScrollIndicator={false}
                 />
             )}
@@ -160,7 +150,6 @@ const OrderApplicantView = ({ route }: any) => {
 export default OrderApplicantView
 
 const styles = StyleSheet.create({
-    listContent: {},
     card: {
         backgroundColor: Colors.whiteFF,
         borderRadius: 12,

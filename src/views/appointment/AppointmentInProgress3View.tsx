@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -39,6 +39,32 @@ const AppointmentInProgress3View = () => {
     const difference = grandTotal - agreedPrice
     const [loading, setLoading] = useState(false)
 
+    // ✅ VALIDATION: Kiểm tra từng phụ tùng có đầy đủ thông tin không
+    const { isFormValid, invalidIssues } = useMemo(() => {
+        // Nếu không có phụ tùng nào → chỉ cần tổng tiền = giá thỏa thuận
+        if (additionalIssues.length === 0) {
+            return { isFormValid: difference === 0, invalidIssues: [] }
+        }
+
+        // Kiểm tra từng phụ tùng
+        const invalid: number[] = []
+        for (let i = 0; i < additionalIssues.length; i++) {
+            const issue = additionalIssues[i]
+            const hasNote = issue.note.trim().length > 0
+            const hasCost = issue.cost > 0
+            const hasImage = issue.images.length > 0
+
+            if (!hasNote || !hasCost || !hasImage) {
+                invalid.push(i)
+            }
+        }
+
+        return {
+            isFormValid: invalid.length === 0 && difference === 0,
+            invalidIssues: invalid,
+        }
+    }, [additionalIssues, difference])
+
     const handleUploadPhoto = async (image: any, issueIndex?: number) => {
         const uploadedUrl = await uploadKycPhoto(image, 'imageService')
         if (uploadedUrl && issueIndex !== undefined) {
@@ -58,15 +84,24 @@ const AppointmentInProgress3View = () => {
     }
 
     const handleConfirm = () => {
-        console.log(appointmentData?.appointmentInProgress)
-        if (difference !== 0) {
-            GlobalModalController.showModal({
-                title: 'Không thể bàn giao',
-                description: `Tổng tiền (${grandTotal.toLocaleString(
-                    'vi-VN',
-                )} VND) không khớp với giá thỏa thuận (${agreedPrice.toLocaleString('vi-VN')} VND)`,
-                icon: 'fail',
-            })
+        // ✅ Kiểm tra validation trước khi submit
+        if (!isFormValid) {
+            if (difference !== 0) {
+                GlobalModalController.showModal({
+                    title: 'Không thể bàn giao',
+                    description: `Tổng tiền (${grandTotal.toLocaleString(
+                        'vi-VN',
+                    )} VND) không khớp với giá thỏa thuận (${agreedPrice.toLocaleString('vi-VN')} VND)`,
+                    icon: 'fail',
+                })
+            } else {
+                GlobalModalController.showModal({
+                    title: 'Thông tin chưa đầy đủ',
+                    description:
+                        'Vui lòng điền đầy đủ ghi chú, chi phí và ảnh cho tất cả phụ tùng.',
+                    icon: 'warning',
+                })
+            }
             return
         }
 
@@ -114,95 +149,120 @@ const AppointmentInProgress3View = () => {
                     </TouchableOpacity>
                 </View>
 
-                {additionalIssues.map((issue, index) => (
-                    <View key={index} style={styles.issueBox}>
-                        <TouchableOpacity
-                            style={styles.removeBtn}
-                            onPress={() =>
-                                setAdditionalIssues((prev) => prev.filter((_, i) => i !== index))
-                            }
+                {additionalIssues.map((issue, index) => {
+                    // ✅ Kiểm tra phụ tùng này có thiếu thông tin không
+                    const isInvalid = invalidIssues.includes(index)
+                    const missingFields = []
+                    if (!issue.note.trim()) missingFields.push('ghi chú')
+                    if (issue.cost <= 0) missingFields.push('chi phí')
+                    if (issue.images.length === 0) missingFields.push('ảnh')
+
+                    return (
+                        <View
+                            key={index}
+                            style={[styles.issueBox, isInvalid && styles.issueBoxInvalid]}
                         >
-                            <Text style={styles.removeText}>×</Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.removeBtn}
+                                onPress={() =>
+                                    setAdditionalIssues((prev) =>
+                                        prev.filter((_, i) => i !== index),
+                                    )
+                                }
+                            >
+                                <Text style={styles.removeText}>×</Text>
+                            </TouchableOpacity>
 
-                        <Input
-                            title={`Ghi chú phụ tùng ${index + 1}`}
-                            area
-                            value={issue.note}
-                            onChangeText={(txt) => {
-                                setAdditionalIssues((prev) => {
-                                    const newIssues = [...prev]
-                                    newIssues[index].note = txt
-                                    return newIssues
-                                })
-                            }}
-                        />
-
-                        <Spacer height={10} />
-
-                        <Input
-                            title={`Chi phí phụ tùng ${index + 1}`}
-                            keyboardType="numeric"
-                            value={issue.cost ? issue.cost.toLocaleString('vi-VN') : ''}
-                            onChangeText={(txt) => {
-                                const raw = txt.replace(/\D/g, '')
-                                setAdditionalIssues((prev) => {
-                                    const newIssues = [...prev]
-                                    newIssues[index].cost = raw ? Number(raw) : 0
-                                    return newIssues
-                                })
-                            }}
-                        />
-
-                        <Spacer height={10} />
-
-                        <Text style={{ ...DefaultStyles.textBold14Black, marginBottom: 8 }}>
-                            Ảnh phụ tùng {index + 1}
-                        </Text>
-                        <View style={styles.imagesWrapper}>
-                            {issue.images.map((img, imgIndex) => (
-                                <View key={imgIndex} style={styles.imageBox}>
-                                    <FastImage
-                                        source={{ uri: img }}
-                                        style={styles.capturedImage}
-                                        resizeMode={FastImage.resizeMode.cover}
-                                    />
-                                    <TouchableOpacity
-                                        style={styles.deleteBtn}
-                                        onPress={() =>
-                                            setAdditionalIssues((prev) => {
-                                                const newIssues = [...prev]
-                                                newIssues[index].images = newIssues[
-                                                    index
-                                                ].images.filter((_, i) => i !== imgIndex)
-                                                return newIssues
-                                            })
-                                        }
-                                    >
-                                        <Text style={styles.deleteText}>×</Text>
-                                    </TouchableOpacity>
+                            {/* ⚠️ Hiển thị cảnh báo nếu thiếu thông tin */}
+                            {isInvalid && (
+                                <View style={styles.warningBadge}>
+                                    <Text style={styles.warningBadgeText}>
+                                        ⚠️ Thiếu: {missingFields.join(', ')}
+                                    </Text>
                                 </View>
-                            ))}
-
-                            {issue.images.length < 2 && (
-                                <TouchableOpacity
-                                    style={[styles.imageBox, styles.addBox]}
-                                    onPress={() => {
-                                        setCurrentIssueIndex(index)
-                                        setShowCameraOption(true)
-                                    }}
-                                >
-                                    <FastImage
-                                        source={ic_balence}
-                                        style={styles.image}
-                                        resizeMode={FastImage.resizeMode.contain}
-                                    />
-                                    <Text style={DefaultStyles.textMedium12Black}>Thêm ảnh</Text>
-                                </TouchableOpacity>
                             )}
+
+                            <Input
+                                title={`Ghi chú phụ tùng ${index + 1}`}
+                                area
+                                value={issue.note}
+                                onChangeText={(txt) => {
+                                    setAdditionalIssues((prev) => {
+                                        const newIssues = [...prev]
+                                        newIssues[index].note = txt
+                                        return newIssues
+                                    })
+                                }}
+                            />
+
+                            <Spacer height={10} />
+
+                            <Input
+                                title={`Chi phí phụ tùng ${index + 1}`}
+                                keyboardType="numeric"
+                                value={issue.cost ? issue.cost.toLocaleString('vi-VN') : ''}
+                                onChangeText={(txt) => {
+                                    const raw = txt.replace(/\D/g, '')
+                                    setAdditionalIssues((prev) => {
+                                        const newIssues = [...prev]
+                                        newIssues[index].cost = raw ? Number(raw) : 0
+                                        return newIssues
+                                    })
+                                }}
+                            />
+
+                            <Spacer height={10} />
+
+                            <Text style={{ ...DefaultStyles.textBold14Black, marginBottom: 8 }}>
+                                Ảnh phụ tùng {index + 1}
+                            </Text>
+                            <View style={styles.imagesWrapper}>
+                                {issue.images.map((img, imgIndex) => (
+                                    <View key={imgIndex} style={styles.imageBox}>
+                                        <FastImage
+                                            source={{ uri: img }}
+                                            style={styles.capturedImage}
+                                            resizeMode={FastImage.resizeMode.cover}
+                                        />
+                                        <TouchableOpacity
+                                            style={styles.deleteBtn}
+                                            onPress={() =>
+                                                setAdditionalIssues((prev) => {
+                                                    const newIssues = [...prev]
+                                                    newIssues[index].images = newIssues[
+                                                        index
+                                                    ].images.filter((_, i) => i !== imgIndex)
+                                                    return newIssues
+                                                })
+                                            }
+                                        >
+                                            <Text style={styles.deleteText}>×</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+
+                                {issue.images.length < 2 && (
+                                    <TouchableOpacity
+                                        style={[styles.imageBox, styles.addBox]}
+                                        onPress={() => {
+                                            setCurrentIssueIndex(index)
+                                            setShowCameraOption(true)
+                                        }}
+                                    >
+                                        <FastImage
+                                            source={ic_balence}
+                                            style={styles.image}
+                                            resizeMode={FastImage.resizeMode.contain}
+                                        />
+                                        <Text style={DefaultStyles.textMedium12Black}>
+                                            Thêm ảnh
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
-                    </View>
-                ))}
+                    )
+                })}
 
                 <Spacer height={20} />
             </ScrollView>
@@ -236,31 +296,11 @@ const AppointmentInProgress3View = () => {
                 <View style={{ flexDirection: 'row' }}>
                     <Spacer width={10} />
 
-                    {/* <SwipeButton
-                    containerStyles={{
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        marginHorizontal: 16,
-                        marginBottom: 10,
-                    }}
-                    railBackgroundColor={Colors.whiteAE}
-                    railFillBackgroundColor={'rgba(0,0,0,0.4)'}
-                    railBorderColor={Colors.gray72}
-                    railFillBorderColor={Colors.whiteAE}
-                    railStyles={{ borderRadius: 8 }}
-                    thumbIconBorderColor="transparent"
-                    thumbIconBackgroundColor={Colors.gray44}
-                    thumbIconStyles={{ borderRadius: 4, width: 40, height: 40 }}
-                    title="Hoàn thành kiểm tra "
-                    titleStyles={{ ...DefaultStyles.textBold16Black }}
-                    titleColor={Colors.black01}
-                    onSwipeSuccess={() => {
-                      
-                    }}
-                /> */}
                     <Button
                         title="Bàn giao"
                         containerStyle={{ width: '100%' }}
+                        disable={!isFormValid} // ✅ Disable nếu chưa valid
+                        color={isFormValid ? Colors.primary0 : Colors.gray72} // ✅ Đổi màu
                         onPress={handleConfirm}
                     />
                 </View>
@@ -325,6 +365,27 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         position: 'relative',
     },
+    // ✅ Style cho phụ tùng thiếu thông tin
+    issueBoxInvalid: {
+        borderColor: Colors.red30,
+        borderWidth: 2,
+        backgroundColor: '#FFF5F5',
+    },
+    // ✅ Badge cảnh báo trong mỗi phụ tùng
+    warningBadge: {
+        backgroundColor: '#FFF3CD',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 6,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#FFC107',
+    },
+    warningBadgeText: {
+        color: '#856404',
+        fontSize: 12,
+        fontWeight: '600',
+    },
     imagesWrapper: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -380,6 +441,7 @@ const styles = StyleSheet.create({
         height: 24,
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 10,
     },
     removeText: {
         color: '#fff',

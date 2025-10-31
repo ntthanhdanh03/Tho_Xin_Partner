@@ -23,6 +23,8 @@ const GenericModal: React.FC<GenericModalProps> = ({
             onBackdropPress={onClose}
             style={styles.modal}
             backdropOpacity={0.5}
+            presentationStyle="overFullScreen"
+            statusBarTranslucent
         >
             <View style={[styles.bottomSheet, { height: `${height * 100}%` }]}>
                 <View style={styles.body}>{children}</View>

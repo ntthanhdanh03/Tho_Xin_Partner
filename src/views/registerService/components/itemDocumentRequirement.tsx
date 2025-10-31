@@ -4,7 +4,7 @@ import { scaleModerate } from '../../../styles/scaleDimensions'
 import { DefaultStyles } from '../../../styles/DefaultStyles'
 import { useNavigation } from '@react-navigation/native'
 import FastImage from 'react-native-fast-image'
-import { ic_balence } from '../../../assets'
+import { ic_arrow_right, ic_balence } from '../../../assets'
 import { Colors } from '../../../styles/Colors'
 
 type ItemDocumentProps = {
@@ -44,7 +44,7 @@ const ItemDocumentRequirement: React.FC<ItemDocumentProps> = ({
                 ) : approved === 'APPROVED' ? (
                     <Text style={{ color: Colors.green34 }}>Đã duyệt</Text>
                 ) : null}
-                <FastImage source={ic_balence} style={{ height: 24, width: 24 }} />
+                <FastImage source={ic_arrow_right} style={{ height: 24, width: 24 }} />
             </View>
         </TouchableOpacity>
     )

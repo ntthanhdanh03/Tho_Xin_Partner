@@ -17,7 +17,7 @@ import { sendMessageAction } from '../../store/actions/chatAction'
 import { Colors } from '../../styles/Colors'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { scaleModerate } from '../../styles/scaleDimensions'
-import { ic_calendar, ic_chevron_left } from '../../assets'
+import { ic_calendar, ic_chevron_left, ic_phone, ic_phone_native } from '../../assets'
 import CallModal from '../../navigation/CallModal'
 
 const ChatViewVer2 = () => {
@@ -92,6 +92,32 @@ const ChatViewVer2 = () => {
         )
     }
 
+    const renderWorkerWarningHeader = () => (
+        <View style={styles.warningContainer}>
+            <View style={styles.warningIconContainer}>
+                <Text style={styles.warningIcon}>⚠️</Text>
+            </View>
+            <View style={styles.warningContent}>
+                <Text style={styles.warningTitle}>Lưu ý quan trọng</Text>
+                <Text style={styles.warningText}>
+                    • Hệ thống sẽ giám sát tin nhắn, sử dụng AI để phát hiện vi phạm.
+                </Text>
+                <Text style={styles.warningText}>
+                    • Không được yêu cầu khách thanh toán trực tiếp ngoài nền tảng.
+                </Text>
+                <Text style={styles.warningText}>
+                    • Vi phạm nhiều lần có thể dẫn tới khóa tài khoản vĩnh viễn.
+                </Text>
+                <Text style={styles.warningText}>
+                    • Tất cả hành vi gian lận hoặc lạm dụng sẽ được ghi nhận và xử lý nghiêm.
+                </Text>
+                <Text style={styles.warningText}>
+                    • Hãy luôn tuân thủ quy định và giao dịch minh bạch qua nền tảng.
+                </Text>
+            </View>
+        </View>
+    )
+
     return (
         <SafeAreaView style={[DefaultStyles.container, { backgroundColor: 'white' }]}>
             <KeyboardAvoidingView
@@ -100,13 +126,15 @@ const ChatViewVer2 = () => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity
-                        onPress={() => navigation.goBack()}
-                        style={{ padding: 5, marginRight: 5 }}
-                    >
-                        <FastImage source={ic_chevron_left} style={{ width: 26, height: 26 }} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Khách hàng</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
+                            onPress={() => navigation.goBack()}
+                            style={{ padding: 5, marginRight: 5 }}
+                        >
+                            <FastImage source={ic_chevron_left} style={{ width: 26, height: 26 }} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>Khách hàng</Text>
+                    </View>
 
                     <TouchableOpacity
                         onPress={() => {
@@ -120,11 +148,13 @@ const ChatViewVer2 = () => {
 
                                 from_userId: authData?.user?._id,
                                 form_name: authData?.user?.fullName,
-                                form_avatar: authData?.user?.avatarUrl,
+                                form_avatar:
+                                    authData?.user?.avatarUrl ||
+                                    'https://cdn-icons-png.flaticon.com/512/847/847969.png',
                             })
                         }}
                     >
-                        <FastImage style={{ height: 34, width: 34 }} source={ic_calendar} />
+                        <FastImage style={{ height: 24, width: 24 }} source={ic_phone} />
                     </TouchableOpacity>
                 </View>
 
@@ -134,6 +164,7 @@ const ChatViewVer2 = () => {
                     data={messages}
                     keyExtractor={(item) => item._id}
                     renderItem={renderMessage}
+                    ListHeaderComponent={renderWorkerWarningHeader}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ padding: 10, paddingBottom: 20 }}
                     onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -177,6 +208,38 @@ const ChatViewVer2 = () => {
 export default ChatViewVer2
 
 const styles = StyleSheet.create({
+    warningContainer: {
+        backgroundColor: Colors.yellowFFF,
+        borderRadius: scaleModerate(12),
+        padding: scaleModerate(16),
+        marginTop: scaleModerate(16),
+        marginBottom: scaleModerate(12),
+        borderWidth: 1,
+        borderColor: Colors.yellowDC,
+        flexDirection: 'row',
+    },
+    warningIconContainer: {
+        marginRight: scaleModerate(12),
+    },
+    warningIcon: {
+        fontSize: 24,
+    },
+    warningContent: {
+        flex: 1,
+    },
+    warningTitle: {
+        ...DefaultStyles.textBold14Black,
+        color: Colors.yellowDC,
+        marginBottom: scaleModerate(8),
+        fontSize: 15,
+    },
+    warningText: {
+        ...DefaultStyles.textRegular13Black,
+        color: Colors.black1B,
+        lineHeight: 20,
+        marginBottom: scaleModerate(4),
+        fontSize: 13,
+    },
     messageContainer: {
         marginVertical: scaleModerate(4),
         paddingHorizontal: scaleModerate(14),
@@ -262,6 +325,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     header: {
+        justifyContent: 'space-between',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: scaleModerate(12),

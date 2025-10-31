@@ -4,6 +4,7 @@ import Sound from 'react-native-sound'
 import { Colors } from '../styles/Colors'
 import SocketUtil from '../utils/socketUtil'
 import WebRTCPartner from '../utils/webrtcClient'
+import { DefaultStyles } from '../styles/DefaultStyles'
 
 const { height } = Dimensions.get('window')
 
@@ -53,6 +54,7 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
     useImperativeHandle(ref, () => ({
         show: (props: CallModalProps) => {
             setData(props)
+            console.log('📞 [CallModal props]', props)
             setVisible(true)
 
             Animated.timing(translateY, {
@@ -160,7 +162,10 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
 
     // Outgoing call effect
     useEffect(() => {
-        if (!data?.to_userId || !data?.from_userId) return
+        if (!data?.to_userId || !data?.from_userId || !data?.form_name || !data?.form_avatar) {
+            console.log('⚠️ DATA THIẾU KHÔNG MỞ CUỘC GỌI', data)
+            return
+        }
 
         if (data?.type === 'outgoing' && data?.to_userId) {
             SocketUtil.emit('call.request', {
@@ -171,7 +176,12 @@ const CallModalComponent = forwardRef<CallModalRef>((_, ref) => {
                 form_avatar: data.form_avatar,
             })
 
-            WebRTCPartner.startCall(data.to_userId, data.from_userId)
+            WebRTCPartner.startCall(
+                data.to_userId,
+                data.from_userId,
+                data.form_name,
+                data.form_avatar,
+            )
         }
     }, [data])
 
@@ -471,11 +481,7 @@ const styles = StyleSheet.create({
         marginBottom: 80,
     },
     name: {
-        fontSize: 32,
-        color: '#ffffff',
-        fontWeight: '700',
-        marginBottom: 8,
-        textAlign: 'center',
+        ...DefaultStyles.textMedium18Black,
     },
     nameInCall: {
         fontSize: 28,

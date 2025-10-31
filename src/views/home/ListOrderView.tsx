@@ -20,7 +20,6 @@ const ListOrderView = ({ route }: any) => {
     const tabData = [
         { key: 'tab1', value: t('Đơn Chờ') },
         { key: 'tab2', value: t('Đơn đã báo giá') },
-        // { key: 'tab3', value: t('Đơn của bạn') },
     ]
 
     const renderTabContent = () => {
@@ -29,8 +28,6 @@ const ListOrderView = ({ route }: any) => {
                 return <OrderWaitingPartnerView />
             case 'tab2':
                 return <OrderApplicantView />
-            // case 'tab3':
-            //     return <YourOrderView />
             default:
                 return null
         }

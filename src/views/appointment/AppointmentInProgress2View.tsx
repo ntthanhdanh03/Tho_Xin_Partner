@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { DefaultStyles } from '../../styles/DefaultStyles'
@@ -43,6 +43,15 @@ const AppointmentInProgress2View = () => {
 
     const [isImageViewVisible, setIsImageViewVisible] = useState(false)
     const [imageIndex, setImageIndex] = useState(0)
+
+    // ✅ VALIDATION: Kiểm tra form đã đủ thông tin chưa
+    const isFormValid = useMemo(() => {
+        const hasImages = images.length > 0
+        const hasPrice = price > 0
+        const hasDescription = description.trim().length > 0
+
+        return hasImages && hasPrice && hasDescription
+    }, [images, price, description])
 
     const handleUploadPhoto = async (image: any) => {
         const uploadedImage = await uploadKycPhoto(image, 'imageService')
@@ -112,9 +121,10 @@ const AppointmentInProgress2View = () => {
                     containerStyle={{ width: '100%' }}
                     message="Hãy trao đổi giá cả tiền công và vật tư với khách hàng trước khi nhập."
                     keyboardType="numeric"
-                    value={price ? `${price}` : ''}
-                    onChangeText={(txt: any) => {
-                        setPrice(txt)
+                    value={price ? price.toLocaleString('vi-VN') : ''}
+                    onChangeText={(txt) => {
+                        const numeric = txt.replace(/\D/g, '')
+                        setPrice(numeric ? parseInt(numeric, 10) : 0)
                     }}
                 />
 
@@ -154,15 +164,21 @@ const AppointmentInProgress2View = () => {
                             onPress={() => setShowCameraOption(true)}
                             activeOpacity={0.7}
                         >
-                            <FastImage
-                                source={ic_balence}
-                                style={styles.image}
-                                resizeMode={FastImage.resizeMode.contain}
-                            />
                             <Text style={DefaultStyles.textMedium12Black}>Thêm ảnh</Text>
                         </TouchableOpacity>
                     )}
                 </View>
+
+                {/* ⚠️ Hiển thị cảnh báo nếu thiếu thông tin */}
+                {!isFormValid && (
+                    <View style={styles.warningBox}>
+                        <Text style={styles.warningText}>
+                            ⚠️ Vui lòng điền đầy đủ: {!images.length && '• Ảnh tình trạng '}
+                            {!price && '• Giá tiền '}
+                            {!description.trim() && '• Mô tả vấn đề'}
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
 
             <View
@@ -176,18 +192,21 @@ const AppointmentInProgress2View = () => {
                 <Spacer height={10} />
                 <Button
                     title="Sửa Thất Bại"
-                    containerStyle={{ width: '50%' }}
+                    containerStyle={{ width: '48%' }}
                     color={Colors.red30}
                     onPress={() => {
                         setIsModalVisible(true)
                     }}
                 />
-                <Spacer height={16} />
+                <Spacer height={10} />
                 <Button
                     title="Tiếp tục"
-                    containerStyle={{ width: '50%' }}
-                    color={Colors.primary0}
+                    containerStyle={{ width: '48%' }}
+                    color={isFormValid ? Colors.primary0 : Colors.gray72} // ✅ Đổi màu khi disable
+                    disable={!isFormValid} // ✅ Disable nếu chưa đủ thông tin
                     onPress={() => {
+                        if (!isFormValid) return // ✅ Không cho nhấn nếu chưa valid
+
                         GlobalModalController.onActionChange((value: boolean) => {
                             if (value) handleConfirm()
                             else GlobalModalController.hideModal()
@@ -340,5 +359,19 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         fontWeight: 'bold',
+    },
+    // ✅ Style cho warning box
+    warningBox: {
+        marginTop: 12,
+        padding: 12,
+        backgroundColor: '#FFF3CD',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#FFC107',
+    },
+    warningText: {
+        color: '#856404',
+        fontSize: 13,
+        lineHeight: 18,
     },
 })

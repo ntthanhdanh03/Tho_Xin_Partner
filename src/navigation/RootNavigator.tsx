@@ -27,6 +27,7 @@ import {
 import { getOrderAction } from '../store/actions/orderAction'
 import { getChatRoomByApplicantAction } from '../store/actions/chatAction'
 import { getAppointmentAction } from '../store/actions/appointmentAction'
+import RNBootSplash from 'react-native-bootsplash'
 
 const Stack = createNativeStackNavigator()
 
@@ -50,6 +51,9 @@ const RootNavigator = () => {
     // ==================== BOOTSTRAP ====================
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            RNBootSplash.hide({ fade: true })
+        }, 3500)
         const bootstrap = async () => {
             const token = await AsyncStorage.getItem('authToken')
             if (token) {
@@ -120,15 +124,6 @@ const RootNavigator = () => {
                 name: 'webrtc.offer',
                 handler: (data: any) => {
                     console.log('📥 Nhận offer từ:', data.from_userId)
-
-                    pendingCallData = {
-                        from_userId: data.from_userId,
-                        to_userId: data.to_userId,
-                        sdp: data.sdp,
-                        form_name: data?.form_name,
-                        form_avatar: data?.form_avatar,
-                    }
-
                     CallModal.show({
                         type: 'incoming',
                         role_Receiver: 'partner',

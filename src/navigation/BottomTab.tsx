@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import React, { FC, useEffect } from 'react'
+import { Pressable, StyleSheet, Text, View, Animated } from 'react-native'
+import React, { FC, useEffect, useRef } from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { NavigationHelpers, ParamListBase, TabNavigationState } from '@react-navigation/native'
@@ -10,12 +10,16 @@ import { scaleModerate } from '../styles/scaleDimensions'
 import { Colors } from '../styles/Colors'
 import { DefaultStyles } from '../styles/DefaultStyles'
 import { useTranslation } from 'react-i18next'
-import { useSelector } from 'react-redux'
-import LoginView from '../views/auth/LoginView'
-import { ic_home } from '../assets'
+import {
+    ic_calendar,
+    ic_calendar_check,
+    ic_home,
+    ic_home_check,
+    ic_user,
+    ic_user_check,
+} from '../assets'
 import HomeView from '../views/home/HomeView'
 import ProfileView from '../views/profile/ProfileView'
-import HistoryOderView from '../views/history/HistoryOderView'
 import InComeView from '../views/income/InComeView'
 
 interface TabBar {
@@ -33,25 +37,108 @@ const getIconAndLabel = (routeName: string, t: any) => {
         case 'HomeTab':
             label = t('Trang chủ')
             iconDefault = ic_home
-            iconActive = ic_home
+            iconActive = ic_home_check
             break
-        case 'HistoryTab':
-            label = t('Lịch sử')
-            iconDefault = ic_home
-            iconActive = ic_home
-            break
-        case 'InComeTab':
-            label = t('Thu Nhập')
-            iconDefault = ic_home
-            iconActive = ic_home
+        case 'ActivityTab':
+            label = t('Hoạt động')
+            iconDefault = ic_calendar
+            iconActive = ic_calendar_check
             break
         case 'ProfileTab':
             label = t('Tôi')
-            iconDefault = ic_home
-            iconActive = ic_home
+            iconDefault = ic_user
+            iconActive = ic_user_check
             break
     }
     return { label, iconDefault, iconActive }
+}
+
+const TabButton: FC<{
+    route: any
+    index: number
+    isFocused: boolean
+    options: any
+    onPress: () => void
+    onLongPress: () => void
+    label: string
+    iconDefault: number
+    iconActive: number
+}> = ({
+    route,
+    index,
+    isFocused,
+    options,
+    onPress,
+    onLongPress,
+    label,
+    iconDefault,
+    iconActive,
+}) => {
+    const scaleAnim = useRef(new Animated.Value(isFocused ? 1 : 0.9)).current
+    const translateYAnim = useRef(new Animated.Value(isFocused ? -4 : 0)).current
+    const opacityAnim = useRef(new Animated.Value(isFocused ? 1 : 0.6)).current
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.spring(scaleAnim, {
+                toValue: isFocused ? 1.1 : 0.9,
+                useNativeDriver: true,
+                friction: 6,
+                tension: 100,
+            }),
+            Animated.spring(translateYAnim, {
+                toValue: isFocused ? -6 : 0,
+                useNativeDriver: true,
+                friction: 6,
+                tension: 100,
+            }),
+            Animated.timing(opacityAnim, {
+                toValue: isFocused ? 1 : 0.6,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+        ]).start()
+    }, [isFocused])
+
+    return (
+        <Pressable
+            key={index}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={options.tabBarTestID}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={styles.btn}
+        >
+            <Animated.View
+                style={[
+                    styles.iconContainer,
+                    {
+                        transform: [{ scale: scaleAnim }, { translateY: translateYAnim }],
+                        opacity: opacityAnim,
+                    },
+                ]}
+            >
+                {isFocused && (
+                    <View style={styles.activeBackground}>
+                        <View style={styles.activeIndicator} />
+                    </View>
+                )}
+                <FastImage
+                    source={isFocused ? iconActive : iconDefault}
+                    style={styles.iconTab}
+                    resizeMode={'contain'}
+                />
+                <Text
+                    style={[styles.title, isFocused && { color: Colors.primary }]}
+                    numberOfLines={1}
+                >
+                    {label}
+                </Text>
+            </Animated.View>
+        </Pressable>
+    )
 }
 
 const MyTabBar: FC<TabBar> = ({ state, descriptors, navigation }) => {
@@ -59,16 +146,6 @@ const MyTabBar: FC<TabBar> = ({ state, descriptors, navigation }) => {
 
     return (
         <View style={styles.tabBarWrap}>
-            <View style={[styles.tabBar, styles.tabBarBottom]}>
-                {state.routes.map((route, index) => {
-                    return (
-                        <View
-                            key={index}
-                            style={[styles.btn, { height: scaleModerate(20) }]}
-                        ></View>
-                    )
-                })}
-            </View>
             <View style={styles.tabBar}>
                 {state.routes.map((route, index) => {
                     const { options } = descriptors[route.key]
@@ -96,41 +173,18 @@ const MyTabBar: FC<TabBar> = ({ state, descriptors, navigation }) => {
                     }
 
                     return (
-                        <Pressable
+                        <TabButton
                             key={index}
-                            accessibilityRole="button"
-                            accessibilityState={isFocused ? { selected: true } : {}}
-                            accessibilityLabel={options.tabBarAccessibilityLabel}
-                            testID={options.tabBarTestID}
+                            route={route}
+                            index={index}
+                            isFocused={isFocused}
+                            options={options}
                             onPress={onPress}
                             onLongPress={onLongPress}
-                            style={styles.btn}
-                        >
-                            <View style={styles.iconContainer}>
-                                {isFocused && (
-                                    <>
-                                        <FastImage
-                                            source={iconActive}
-                                            style={styles.iconTab}
-                                            resizeMode={'contain'}
-                                        />
-                                        <Text style={[styles.title, { color: Colors.primary }]}>
-                                            {label}
-                                        </Text>
-                                    </>
-                                )}
-                                {!isFocused && (
-                                    <>
-                                        <FastImage
-                                            source={iconDefault}
-                                            style={styles.iconTab}
-                                            resizeMode={'contain'}
-                                        />
-                                        <Text style={styles.title}>{label}</Text>
-                                    </>
-                                )}
-                            </View>
-                        </Pressable>
+                            label={label}
+                            iconDefault={iconDefault}
+                            iconActive={iconActive}
+                        />
                     )
                 })}
             </View>
@@ -168,23 +222,6 @@ const ProfileStackScreen = ({ route }: any) => {
     )
 }
 
-const HistoryOderStack = createNativeStackNavigator()
-const HistoryOderStackScreen = ({ route }: any) => {
-    return (
-        <HistoryOderStack.Navigator
-            screenOptions={{
-                headerShown: false,
-            }}
-        >
-            <HistoryOderStack.Screen
-                name="HistoryOderView"
-                component={HistoryOderView}
-                initialParams={route?.params}
-            />
-        </HistoryOderStack.Navigator>
-    )
-}
-
 const InComeStack = createNativeStackNavigator()
 const InComeStackScreen = ({ route }: any) => {
     return (
@@ -201,7 +238,6 @@ const InComeStackScreen = ({ route }: any) => {
         </InComeStack.Navigator>
     )
 }
-
 const Tab = createBottomTabNavigator()
 const BottomTab = () => {
     return (
@@ -210,7 +246,6 @@ const BottomTab = () => {
             tabBar={(props) => <MyTabBar {...props} />}
         >
             <Tab.Screen name="HomeTab" component={HomeStackScreen} />
-            {/* <Tab.Screen name="HistoryTab" component={HistoryOderStackScreen} /> */}
             <Tab.Screen name="InComeTab" component={InComeStackScreen} />
             <Tab.Screen name="ProfileTab" component={ProfileStackScreen} />
         </Tab.Navigator>
@@ -221,48 +256,66 @@ export default BottomTab
 
 const styles = StyleSheet.create({
     tabBarWrap: {
-        paddingTop: scaleModerate(5),
         backgroundColor: Colors.whiteFF,
+        overflow: 'hidden',
+        ...DefaultStyles.shadow,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: -4,
+        },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 8,
     },
     tabBar: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
-        paddingTop: scaleModerate(10),
-        paddingBottom: scaleModerate(24),
-        paddingHorizontal: scaleModerate(10),
+        alignItems: 'center',
+        paddingTop: scaleModerate(12),
+        paddingBottom: scaleModerate(10),
+        paddingHorizontal: scaleModerate(16),
         backgroundColor: Colors.whiteFC,
-        ...DefaultStyles.shadow,
-    },
-    tabBarBottom: {
-        position: 'absolute',
-        bottom: scaleModerate(-4),
-        backgroundColor: Colors.whiteFF,
     },
     btn: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: scaleModerate(4),
     },
     iconTab: {
-        width: scaleModerate(20),
-        height: scaleModerate(20),
-        marginBottom: scaleModerate(3),
+        width: scaleModerate(24),
+        height: scaleModerate(24),
     },
     iconContainer: {
         justifyContent: 'center',
         alignItems: 'center',
+        position: 'relative',
+        paddingHorizontal: scaleModerate(12),
+        paddingVertical: scaleModerate(8),
+        borderRadius: scaleModerate(12),
     },
-    activeContainer: {
-        backgroundColor: Colors.blueB9,
-        height: scaleModerate(40),
-        width: scaleModerate(66),
+    activeBackground: {
+        position: 'absolute',
+        width: '80%',
+        height: '100%',
+        backgroundColor: Colors.primary + '10',
+        borderRadius: scaleModerate(12),
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: scaleModerate(1),
-        borderRadius: scaleModerate(10),
+    },
+    activeIndicator: {
+        position: 'absolute',
+        top: scaleModerate(-13),
+        width: scaleModerate(32),
+        height: scaleModerate(2),
+        backgroundColor: Colors.primary,
+        borderRadius: scaleModerate(3),
     },
     title: {
-        ...DefaultStyles.textRegular12Red,
+        ...DefaultStyles.textBold18Black,
         color: Colors.gray72,
+        fontSize: scaleModerate(11),
+        marginTop: scaleModerate(2),
     },
     badgeContainer: {
         height: 8,

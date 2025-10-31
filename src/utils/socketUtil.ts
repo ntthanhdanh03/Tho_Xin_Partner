@@ -26,6 +26,7 @@ export default class SocketUtil {
         this.setupCallListeners()
         this.setupWebRTCListeners()
         this.setupTransactionListeners()
+        this.setupAppointmentListeners()
     }
 
     static disconnect() {

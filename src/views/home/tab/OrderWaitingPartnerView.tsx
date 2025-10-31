@@ -5,6 +5,7 @@ import { DefaultStyles } from '../../../styles/DefaultStyles'
 import { Colors } from '../../../styles/Colors'
 import { scaleModerate } from '../../../styles/scaleDimensions'
 import { useNavigation } from '@react-navigation/native'
+import Spacer from '../../components/Spacer'
 
 const OrderWaitingPartnerView = () => {
     const navigation = useNavigation()
@@ -34,15 +35,6 @@ const OrderWaitingPartnerView = () => {
         >
             <View style={styles.cardHeader}>
                 <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>{item.service}</Text>
-                <View
-                    style={[
-                        styles.statusBadge,
-                        {
-                            backgroundColor:
-                                item.status === 'Hoạt động' ? Colors.greenD6 : Colors.grayF5,
-                        },
-                    ]}
-                ></View>
             </View>
 
             <Text
@@ -63,7 +55,7 @@ const OrderWaitingPartnerView = () => {
                 <Text style={[DefaultStyles.textBold14Black, { marginBottom: 6 }]}>
                     Giá tham khảo
                 </Text>
-                <Text style={[DefaultStyles.textBold16Black, { color: Colors.primary700 }]}>
+                <Text style={[DefaultStyles.textBold16Black, { color: Colors.green34 }]}>
                     {item.rangePrice}
                 </Text>
             </View>
@@ -86,6 +78,7 @@ const OrderWaitingPartnerView = () => {
 
     return (
         <View style={DefaultStyles.container}>
+            <Spacer height={10} />
             <FlatList
                 data={waitingOrders}
                 keyExtractor={(item) => item._id}
@@ -140,12 +133,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     priceSection: {
-        backgroundColor: Colors.whiteE5,
         paddingHorizontal: 10,
         paddingVertical: 10,
         borderRadius: 8,
         borderLeftWidth: 3,
-        borderLeftColor: Colors.primary700,
+        borderLeftColor: Colors.gray44,
         marginBottom: 8,
     },
     orderId: {

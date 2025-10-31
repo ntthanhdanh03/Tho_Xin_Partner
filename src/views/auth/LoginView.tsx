@@ -97,8 +97,6 @@ const LoginView = () => {
                                 onSurfaceVariant: Colors.gray44,
                             },
                         }}
-                        left={<TextInput.Icon icon={ic_balence} size={30} />}
-                        right={<TextInput.Icon icon={ic_calendar} />}
                         error={!!phoneError}
                     />
                     {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}

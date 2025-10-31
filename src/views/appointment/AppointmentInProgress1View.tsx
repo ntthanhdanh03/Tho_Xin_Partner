@@ -21,7 +21,6 @@ import { DefaultStyles } from '../../styles/DefaultStyles'
 import Spacer from '../components/Spacer'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { updateAppointmentAction } from '../../store/actions/appointmentAction'
-import { ic_check_select, ic_eye_off } from '../../assets'
 import { updateLocationPartnerAction } from '../../store/actions/locationAction'
 
 // ✅ Import từ utils/MapboxConfig.ts
@@ -32,6 +31,7 @@ import {
     getBounds,
     fetchRoute,
 } from '../../utils/mapboxUtils'
+import { ic_chat, ic_map_gg, ic_phone_native } from '../../assets'
 
 const AppointmentInProgress1View = () => {
     const navigation = useNavigation()
@@ -272,7 +272,7 @@ const AppointmentInProgress1View = () => {
                     <TouchableOpacity
                         onPress={() => phoneNumber && Linking.openURL(`tel:${phoneNumber}`)}
                     >
-                        <FastImage source={ic_eye_off} style={styles.icon} />
+                        <FastImage source={ic_phone_native} style={styles.icon} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() =>
@@ -289,10 +289,10 @@ const AppointmentInProgress1View = () => {
                             )
                         }
                     >
-                        <FastImage source={ic_check_select} style={styles.icon} />
+                        <FastImage source={ic_chat} style={styles.icon} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => mapsUrl && Linking.openURL(mapsUrl)}>
-                        <FastImage source={ic_eye_off} style={styles.icon} />
+                        <FastImage source={ic_map_gg} style={styles.icon} />
                     </TouchableOpacity>
                 </View>
 
@@ -317,8 +317,6 @@ const AppointmentInProgress1View = () => {
                     titleColor={Colors.black01}
                 />
             </View>
-
-            {/* 🔘 Nút định vị */}
             <TouchableOpacity style={styles.meButton} onPress={moveToUserLocation}>
                 <Text style={{ fontSize: 22 }}>📍</Text>
             </TouchableOpacity>
@@ -365,10 +363,10 @@ const styles = StyleSheet.create({
         padding: 15,
         elevation: 4,
     },
-    icon: { height: 24, width: 24, marginLeft: 12 },
+    icon: { height: 28, width: 28, marginLeft: 10 },
     meButton: {
         position: 'absolute',
-        bottom: 250,
+        bottom: '22%',
         right: 20,
         width: 50,
         height: 50,

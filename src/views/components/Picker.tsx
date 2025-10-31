@@ -52,6 +52,8 @@ const Picker = (props: IPicker) => {
             isVisible={props?.isVisible}
             style={styles.modal}
             onBackdropPress={() => props?.onClose()}
+            presentationStyle="overFullScreen"
+            statusBarTranslucent
         >
             <View style={[styles.container, props?.containerStyle]}>
                 <View

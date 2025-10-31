@@ -23,6 +23,8 @@ const UpdateModal = (props: IUpdateModal) => {
             isVisible={props?.isVisible}
             style={styles.modal}
             onBackdropPress={() => props?.onClose()}
+            presentationStyle="overFullScreen"
+            statusBarTranslucent
         >
             <View style={[styles.container]}>
                 <View style={styles.header}>

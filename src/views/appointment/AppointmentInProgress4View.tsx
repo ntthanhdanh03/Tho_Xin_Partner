@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { DefaultStyles } from '../../styles/DefaultStyles'
@@ -28,6 +28,14 @@ const AppointmentInProgress4View = () => {
     const [loading, setLoading] = useState(false)
     const [showCameraOption, setShowCameraOption] = useState(false)
 
+    // ✅ VALIDATION: Kiểm tra có đủ thông tin không
+    const isFormValid = useMemo(() => {
+        const hasDescription = description.trim().length > 0
+        const hasImages = images.length > 0
+
+        return hasDescription && hasImages
+    }, [description, images])
+
     const handleUploadPhoto = async (image: any) => {
         const uploadedImage = await uploadKycPhoto(image, 'imageService')
         if (uploadedImage?.url) {
@@ -36,6 +44,16 @@ const AppointmentInProgress4View = () => {
     }
 
     const handleConfirm = async () => {
+        // ✅ Double check validation trước khi submit
+        if (!isFormValid) {
+            GlobalModalController.showModal({
+                title: 'Thông tin chưa đầy đủ',
+                description: 'Vui lòng điền mô tả và thêm ít nhất 1 ảnh tình trạng sau cùng.',
+                icon: 'warning',
+            })
+            return
+        }
+
         const postData = {
             afterImages: {
                 images: images,
@@ -111,6 +129,17 @@ const AppointmentInProgress4View = () => {
                         </TouchableOpacity>
                     )}
                 </View>
+
+                {/* ⚠️ Hiển thị cảnh báo nếu thiếu thông tin */}
+                {!isFormValid && (
+                    <View style={styles.warningBox}>
+                        <Text style={styles.warningText}>
+                            ⚠️ Vui lòng điền đầy đủ:
+                            {!description.trim() && ' • Mô tả trạng thái'}
+                            {!images.length && ' • Ảnh tình trạng sau'}
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
 
             <View style={{ borderTopWidth: 1, borderColor: Colors.border01 }}>
@@ -122,18 +151,21 @@ const AppointmentInProgress4View = () => {
                         marginHorizontal: 16,
                         marginBottom: 10,
                     }}
-                    railBackgroundColor={Colors.whiteAE}
-                    railFillBackgroundColor={'rgba(0,0,0,0.4)'}
+                    railBackgroundColor={isFormValid ? Colors.whiteAE : Colors.gray72} // ✅ Đổi màu khi disable
+                    railFillBackgroundColor={isFormValid ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.2)'}
                     railBorderColor={Colors.gray72}
-                    railFillBorderColor={Colors.whiteAE}
+                    railFillBorderColor={isFormValid ? Colors.whiteAE : Colors.gray72}
                     railStyles={{ borderRadius: 8 }}
                     thumbIconBorderColor="transparent"
-                    thumbIconBackgroundColor={Colors.gray44}
+                    thumbIconBackgroundColor={isFormValid ? Colors.gray44 : Colors.gray72}
                     thumbIconStyles={{ borderRadius: 4, width: 40, height: 40 }}
-                    title="Hoàn thành kiểm tra "
+                    title="Hoàn thành kiểm tra"
                     titleStyles={{ ...DefaultStyles.textBold16Black }}
-                    titleColor={Colors.black01}
+                    titleColor={isFormValid ? Colors.black01 : Colors.gray72}
+                    disabled={!isFormValid} // ✅ Disable khi chưa valid
                     onSwipeSuccess={() => {
+                        if (!isFormValid) return // ✅ Thêm check để chắc chắn
+
                         GlobalModalController.onActionChange((value: boolean) => {
                             if (value) {
                                 handleConfirm()
@@ -143,8 +175,7 @@ const AppointmentInProgress4View = () => {
                         })
                         GlobalModalController.showModal({
                             title: 'Xác nhận kiểm tra lần cuối?',
-                            description:
-                                'Hãy chắc chắn rằng bạn đã kiểm tra kỹ tình trạng công việc của khách hàng trước khi bắt đầu công việc.',
+                            description: 'Kiểm tra lại thông tin chắc rằng đã đúng ',
                             type: 'yesNo',
                             icon: 'warning',
                         })
@@ -226,5 +257,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         lineHeight: 20,
+    },
+    // ✅ Style cho warning box
+    warningBox: {
+        marginTop: 12,
+        padding: 12,
+        backgroundColor: '#FFF3CD',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#FFC107',
+    },
+    warningText: {
+        color: '#856404',
+        fontSize: 13,
+        lineHeight: 18,
     },
 })

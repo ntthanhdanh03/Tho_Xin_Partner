@@ -80,29 +80,12 @@ const RateHistoryView = () => {
                     </>
                 )}
 
-                {item.images && item.images.length > 0 && (
-                    <>
-                        <Spacer height={12} />
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <View style={styles.imagesContainer}>
-                                {item.images.map((imageUrl: string, index: number) => (
-                                    <Image
-                                        key={index}
-                                        source={{ uri: imageUrl }}
-                                        style={styles.reviewImage}
-                                    />
-                                ))}
-                            </View>
-                        </ScrollView>
-                    </>
-                )}
-
                 {item.appointmentId && (
                     <>
                         <Spacer height={12} />
                         <View style={styles.appointmentInfo}>
                             <Text style={DefaultStyles.textRegular12Gray}>
-                                Mã cuộc hẹn: {item.appointmentId._id}
+                                Mã cuộc hẹn: #{item.appointmentId._id.slice(-6)}
                             </Text>
                         </View>
                     </>
@@ -167,19 +150,17 @@ const styles = StyleSheet.create({
     summaryCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.gray72,
         paddingHorizontal: scaleModerate(20),
         paddingVertical: scaleModerate(12),
         borderRadius: 24,
         marginRight: scaleModerate(16),
     },
     averageRating: {
-        ...DefaultStyles.textBold24Black,
-        color: Colors.whiteFF,
+        ...DefaultStyles.textBold20Black,
         marginRight: scaleModerate(4),
     },
     starLarge: {
-        fontSize: 24,
+        fontSize: 20,
     },
     summaryInfo: {
         flex: 1,

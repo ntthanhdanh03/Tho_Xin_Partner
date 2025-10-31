@@ -6,6 +6,7 @@ import Header from '../components/Header'
 import Spacer from '../components/Spacer'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import {
+    ic_arrow_right,
     ic_balence,
     img_default_avatar,
     // ic_alert_circle,
@@ -59,9 +60,7 @@ const ProfileView = () => {
                             borderColor: Colors.border01,
                             borderRadius: 25,
                         }}
-                    >
-                        <LanguageView />
-                    </View>
+                    ></View>
                 )}
             />
 
@@ -81,9 +80,9 @@ const ProfileView = () => {
                             borderRadius: 40,
                         }}
                     />
-
+                    <Spacer height={5} />
                     {authData && (
-                        <Text style={{ ...DefaultStyles.textRegular20Black }}>
+                        <Text style={{ ...DefaultStyles.textBold16Black }}>
                             {authData?.user?.fullName}
                         </Text>
                     )}
@@ -102,24 +101,8 @@ const ProfileView = () => {
                                     navigation.navigate('PersonalInformationView' as never)
                                 }}
                             >
-                                <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
-                                    <FastImage source={ic_balence} style={styles.icon} />
-                                </View>
                                 <Text style={styles.text}>{t('Thông tin cá nhân')}</Text>
-                                <FastImage source={ic_balence} style={styles.rightIcon} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.row}
-                                onPress={() => {
-                                    navigation.navigate('ChangePasswordView' as never)
-                                }}
-                            >
-                                <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
-                                    <FastImage source={ic_balence} style={styles.icon} />
-                                </View>
-                                <Text style={styles.text}>{t('Đổi mật khẩu')}</Text>
-                                <FastImage source={ic_balence} style={styles.rightIcon} />
+                                <FastImage source={ic_arrow_right} style={styles.rightIcon} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -128,11 +111,8 @@ const ProfileView = () => {
                                     navigation.navigate('RateHistoryView' as never)
                                 }}
                             >
-                                <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
-                                    <FastImage source={ic_balence} style={styles.icon} />
-                                </View>
                                 <Text style={styles.text}>{t('Đánh giá từ khách hàng')}</Text>
-                                <FastImage source={ic_balence} style={styles.rightIcon} />
+                                <FastImage source={ic_arrow_right} style={styles.rightIcon} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -141,24 +121,14 @@ const ProfileView = () => {
                                     navigation.navigate('AppointmentHistoryView' as never)
                                 }}
                             >
-                                <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
-                                    <FastImage source={ic_balence} style={styles.icon} />
-                                </View>
                                 <Text style={styles.text}>{t('Lịch sử cuộc hẹn')}</Text>
-                                <FastImage source={ic_balence} style={styles.rightIcon} />
+                                <FastImage source={ic_arrow_right} style={styles.rightIcon} />
                             </TouchableOpacity>
                         </View>
                     )}
 
                     <TouchableOpacity style={styles.row} onPress={handlePressLogout}>
-                        <View style={[styles.iconRow, { backgroundColor: Colors.whiteE5 }]}>
-                            <FastImage
-                                source={ic_balence}
-                                style={{ height: scaleModerate(16), width: scaleModerate(16) }}
-                            />
-                        </View>
                         <Text style={styles.text}>{t('Đăng xuất')}</Text>
-                        <FastImage source={ic_balence} style={styles.rightIcon} />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -173,9 +143,18 @@ export default ProfileView
 
 const styles = StyleSheet.create({
     row: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: scaleModerate(10),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
+        marginTop: 10,
     },
     iconRow: {
         height: scaleModerate(30),
@@ -195,7 +174,7 @@ const styles = StyleSheet.create({
     text: {
         flex: 1,
         marginLeft: scaleModerate(10),
-        ...DefaultStyles.textRegular14Black,
+        ...DefaultStyles.textMedium14Black,
     },
     camera: {
         backgroundColor: Colors.blue11,

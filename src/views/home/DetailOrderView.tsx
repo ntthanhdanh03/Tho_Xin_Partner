@@ -1,14 +1,5 @@
 import React, { useState } from 'react'
-import {
-    StyleSheet,
-    FlatList,
-    View,
-    Text,
-    ScrollView,
-    TextInput,
-    Image,
-    Dimensions,
-} from 'react-native'
+import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { DefaultStyles } from '../../styles/DefaultStyles'
 import { Colors } from '../../styles/Colors'
@@ -23,7 +14,9 @@ import { applicantOrderAction } from '../../store/actions/orderAction'
 import GlobalModalController from '../components/GlobalModal/GlobalModalController'
 import { useNavigation } from '@react-navigation/native'
 import { getChatRoomByApplicantAction } from '../../store/actions/chatAction'
+import ImageViewing from 'react-native-image-viewing'
 
+// ⚙️ Hàm định dạng tiền VNĐ
 const formatCurrency = (value: string) => {
     if (!value) return ''
     const numeric = value.replace(/\D/g, '')
@@ -37,9 +30,15 @@ const DetailOrderView = ({ route }: any) => {
     const navigation = useNavigation()
     const { data: authData } = useSelector((store: any) => store.auth)
     const { item } = route.params
+
     const [isModalVisible, setIsModalVisible] = useState(false)
     const [price, setPrice] = useState('')
     const [note, setNote] = useState('')
+
+    // 👇 State cho trình xem ảnh
+    const [isImageViewVisible, setIsImageViewVisible] = useState(false)
+    const [imageIndex, setImageIndex] = useState(0)
+    const images = item.images || []
 
     const handleApplicant = () => {
         const postData = {
@@ -82,7 +81,9 @@ const DetailOrderView = ({ route }: any) => {
     return (
         <SafeAreaView style={[DefaultStyles.container]} edges={['top']}>
             <Header isBack title="Chi Tiết Yêu Cầu" />
+
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* --- Thông tin dịch vụ --- */}
                 <View style={styles.serviceCard}>
                     <View style={styles.serviceHeader}>
                         <Text style={[DefaultStyles.textBold16Black, { flex: 1 }]}>
@@ -118,22 +119,28 @@ const DetailOrderView = ({ route }: any) => {
                     </View>
                 </View>
 
+                {/* --- Hình ảnh --- */}
                 <View style={styles.section}>
                     <Text style={[DefaultStyles.textMedium14Black, { marginBottom: 10 }]}>
                         Hình ảnh
                     </Text>
-                    {item.images && item.images.length > 0 ? (
+                    {images.length > 0 ? (
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             style={{ marginLeft: -16 }}
                         >
-                            {item.images.map((image: string, index: number) => (
-                                <Image
+                            {images.map((uri: string, index: number) => (
+                                <TouchableOpacity
                                     key={index}
-                                    source={{ uri: image }}
-                                    style={styles.imageItem}
-                                />
+                                    activeOpacity={0.9}
+                                    onPress={() => {
+                                        setImageIndex(index)
+                                        setIsImageViewVisible(true)
+                                    }}
+                                >
+                                    <Image source={{ uri }} style={styles.imageItem} />
+                                </TouchableOpacity>
                             ))}
                         </ScrollView>
                     ) : (
@@ -141,19 +148,34 @@ const DetailOrderView = ({ route }: any) => {
                     )}
                 </View>
 
+                {/* 👇 Trình xem ảnh toàn màn hình */}
+                <ImageViewing
+                    images={images.map((uri: string) => ({ uri }))}
+                    imageIndex={imageIndex}
+                    visible={isImageViewVisible}
+                    onRequestClose={() => setIsImageViewVisible(false)}
+                    HeaderComponent={({ imageIndex }) => (
+                        <View style={styles.headerIndicator}>
+                            <Text style={styles.indicatorText}>
+                                {imageIndex + 1} / {images.length}
+                            </Text>
+                        </View>
+                    )}
+                />
+
                 <Spacer height={20} />
             </ScrollView>
 
+            {/* --- Nút báo giá --- */}
             <View style={styles.buttonContainer}>
                 <Button
                     title="Báo giá"
                     containerStyle={styles.button}
-                    onPress={() => {
-                        setIsModalVisible(true)
-                    }}
+                    onPress={() => setIsModalVisible(true)}
                 />
             </View>
 
+            {/* --- Modal gửi báo giá --- */}
             <CustomModal
                 visible={isModalVisible}
                 onClose={() => setIsModalVisible(false)}
@@ -183,7 +205,7 @@ const DetailOrderView = ({ route }: any) => {
                     <Spacer height={20} />
                 </ScrollView>
 
-                <View style={styles.modalButtonContainer}>
+                <View>
                     <Button title="Xác nhận" onPress={handleApplicant} disable={!price.trim()} />
                 </View>
             </CustomModal>
@@ -213,11 +235,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         gap: 12,
     },
-    statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 6,
-    },
     section: {
         marginBottom: 18,
     },
@@ -246,5 +263,17 @@ const styles = StyleSheet.create({
     button: {
         margin: 0,
     },
-    modalButtonContainer: {},
+    headerIndicator: {
+        position: 'absolute',
+        top: 50,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 10,
+    },
+    indicatorText: {
+        color: 'white',
+        fontSize: 14,
+    },
 })

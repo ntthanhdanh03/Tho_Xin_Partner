@@ -8,6 +8,7 @@ import {
     Text,
     Pressable,
 } from 'react-native'
+import { Colors } from '../../styles/Colors'
 
 const { height } = Dimensions.get('window')
 
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         padding: 12,
         borderRadius: 8,
-        backgroundColor: 'black',
+        backgroundColor: Colors.redFD,
         alignItems: 'center',
     },
 })
